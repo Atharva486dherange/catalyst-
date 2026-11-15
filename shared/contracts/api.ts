@@ -71,6 +71,9 @@ export const appointmentSchema = appointmentInputSchema.safeExtend({
 });
 export const escalationOutcomeSchema = z.enum(["checked_in", "referred_for_review", "unable_to_reach"]);
 export const resolveEscalationSchema = z.strictObject({ outcome: escalationOutcomeSchema });
+export const escalationQuerySchema = pageQuerySchema.extend({
+  status: z.enum(["unresolved", "open", "claimed", "resolved"]).optional(),
+});
 export const escalationSchema = z.strictObject({
   id: idSchema, doseId: idSchema, assigneeUid: idSchema.nullable(), ownerUid: idSchema.nullable(), state: z.enum(["open", "claimed", "resolved"]),
   openedAt: instantSchema, outcome: escalationOutcomeSchema.nullable(), resolvedAt: instantSchema.nullable(), updatedAt: instantSchema,
@@ -132,7 +135,7 @@ export const apiContracts = {
   createAppointment: { body: appointmentInputSchema, response: successSchema(appointmentSchema) },
   updateAppointment: { body: appointmentInputSchema, response: successSchema(appointmentSchema) },
   cancelAppointment: { response: successSchema(appointmentSchema) },
-  listEscalations: { query: pageQuerySchema, response: successSchema(pageSchema(escalationSchema)) },
+  listEscalations: { query: escalationQuerySchema, response: successSchema(pageSchema(escalationSchema)) },
   claimEscalation: { response: successSchema(escalationSchema) },
   resolveEscalation: { body: resolveEscalationSchema, response: successSchema(escalationSchema) },
   createExtraction: { mediaType: extractionMediaTypeSchema, consent: extractionConsentSchema, response: successSchema(extractionSchema) },

@@ -1,5 +1,6 @@
 import { Timestamp } from "firebase-admin/firestore";
 import type { DocumentReference, Firestore, QueryDocumentSnapshot, Transaction } from "firebase-admin/firestore";
+import { expireInvitations } from "../care-circle/invitations";
 import { currentAssignee, openTask } from "../care-circle/task";
 import { extendOccurrences, hour, localDay, stableId } from "../medications/recurrence";
 import type { MedicationSnapshot, SchedulePlan } from "../medications/recurrence";
@@ -112,4 +113,5 @@ export async function sweep(db: Firestore, now = Timestamp.now()) {
     for (const item of items.docs) await prepareReminder(db, item, kind, now);
   }
   await recoverRevocations(db, now);
+  await expireInvitations(db, now);
 }

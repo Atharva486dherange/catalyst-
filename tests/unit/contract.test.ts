@@ -47,4 +47,12 @@ describe("SAATHI contracts", () => {
     expect(pageQuerySchema.parse({ limit: "50", cursor: "opaque" })).toEqual({ limit: 50, cursor: "opaque" });
     expect(pageQuerySchema.safeParse({ limit: "51" }).success).toBe(false);
   });
+
+  it("validates escalation query filters", () => {
+    const { query } = apiContracts.listEscalations;
+    expect(query.parse({})).toEqual({ limit: 20 });
+    expect(query.parse({ status: "unresolved" })).toEqual({ limit: 20, status: "unresolved" });
+    expect(query.parse({ status: "open", limit: "10" })).toEqual({ limit: 10, status: "open" });
+    expect(query.safeParse({ status: "invalid" }).success).toBe(false);
+  });
 });

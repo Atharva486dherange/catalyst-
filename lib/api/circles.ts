@@ -5,6 +5,7 @@ import type { DocumentSnapshot, Firestore, Transaction } from "firebase-admin/fi
 import type { DecodedIdToken } from "firebase-admin/auth";
 import type { ApiBody } from "@/shared/contracts/api";
 import { consentGrantSchema } from "@/shared/types/domain";
+import { invitationDeliveryId } from "@/functions/src/care-circle/invitation-delivery-id";
 import { access, audit, byId, conflict, digest, exists, instant, notFound, once, page } from "./firestore";
 import type { CircleAccess, MutationContext, PageInput } from "./firestore";
 import { HttpError } from "./http";
@@ -75,7 +76,7 @@ function normalizeEmail(email: string) {
 }
 
 async function stopInvitationDelivery(tx: Transaction, db: Firestore, id: string, now: Timestamp) {
-  const ref = db.collection("notificationJobs").doc(digest(`invitation:${id}`));
+  const ref = db.collection("notificationJobs").doc(invitationDeliveryId(id));
   const job = await tx.get(ref);
   if (job.exists && ["ready", "leased"].includes(job.get("state"))) {
     tx.update(ref, { state: "cancelled", codeCiphertext: FieldValue.delete(), lease: FieldValue.delete(), updatedAt: now });
@@ -130,7 +131,7 @@ export async function createInvitation(
   tx.create(db.collection("invitations").doc(id), record);
   tx.set(recipient, { invitationId: id, updatedAt: now });
   tx.set(quota, { count: used + 1, expiresAt: Timestamp.fromMillis(now.toMillis() + 48 * 3_600_000) });
-  tx.create(db.collection("notificationJobs").doc(digest(`invitation:${id}`)), {
+  tx.create(db.collection("notificationJobs").doc(invitationDeliveryId(id)), {
     kind: "invitation", invitationId: id, codeCiphertext, state: "ready",
     availableAt: now, createdAt: now, attempts: 0,
   });

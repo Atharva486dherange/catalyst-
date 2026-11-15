@@ -160,8 +160,24 @@ test("consent gates access and dose evidence stays distinct from verification", 
   expect(review.state).toBe("needs_review");
   expect(review.patientReportedAt).toBeNull();
   const task = `${path}/escalations/${second.id}`;
+  const openTasks = await helper.get(`${path}/escalations?status=unresolved`);
+  expect(openTasks.status()).toBe(200);
+  const openList = apiContracts.listEscalations.response.parse(await openTasks.json()).data;
+  expect(openList.items.some((item) => item.id === second.id && item.state === "open")).toBe(true);
+
   expect((await helper.post(`${task}/claim`)).status()).toBe(200);
+  const claimedTasks = await helper.get(`${path}/escalations?status=unresolved`);
+  const claimedList = apiContracts.listEscalations.response.parse(await claimedTasks.json()).data;
+  expect(claimedList.items.some((item) => item.id === second.id && item.state === "claimed")).toBe(true);
+
   expect((await helper.post(`${task}/resolve`, { outcome: "checked_in" })).status()).toBe(200);
+  const remaining = apiContracts.listEscalations.response.parse(await (await helper.get(`${path}/escalations?status=unresolved`)).json()).data;
+  expect(remaining.items.some((item) => item.id === second.id)).toBe(false);
+
+  const resolvedOnly = await helper.get(`${path}/escalations?status=resolved`);
+  const resolvedList = apiContracts.listEscalations.response.parse(await resolvedOnly.json()).data;
+  expect(resolvedList.items.some((item) => item.id === second.id && item.state === "resolved")).toBe(true);
+
   const preserved = await owner.get(`${path}/doses/${second.id}`);
   expect(apiContracts.getDose.response.parse(await preserved.json()).data.state).toBe("needs_review");
 
@@ -207,6 +223,42 @@ test("overlapping Scheduler sweeps create one task and one email job", async () 
   expect((await circle.collection("escalations").get()).size).toBe(1);
   expect((await db.collection("notificationJobs").where("circleId", "==", circle.id).get()).size).toBe(1);
   expect((await circle.collection("auditEvents").get()).size).toBe(1);
+});
+
+test("Scheduler expires invitations and removes pending email codes without email delivery", async () => {
+  const { db } = emulators();
+  const now = Timestamp.now();
+  async function pendingInvitation(delivery: "ready" | "leased", expiresAt: ReturnType<typeof Timestamp.now>) {
+    const invitation = db.collection("invitations").doc();
+    const jobId = createHash("sha256").update(`invitation:${invitation.id}`).digest("base64url");
+    const job = db.collection("notificationJobs").doc(jobId);
+    await Promise.all([
+      invitation.create({ state: "pending", expiresAt }),
+      job.create({
+        state: delivery, codeCiphertext: "synthetic-code",
+        ...(delivery === "leased" ? { lease: "synthetic-lease" } : {}),
+      }),
+    ]);
+    return { invitation, job };
+  }
+  const [queued, leased, fresh] = await Promise.all([
+    pendingInvitation("ready", now),
+    pendingInvitation("leased", now),
+    pendingInvitation("ready", Timestamp.fromMillis(now.toMillis() + hour)),
+  ]);
+
+  await Promise.all([sweep(db, now), sweep(db, now)]);
+
+  for (const { invitation, job } of [queued, leased]) {
+    expect((await invitation.get()).get("state")).toBe("expired");
+    const cancelled = await job.get();
+    expect(cancelled.get("state")).toBe("cancelled");
+    expect(cancelled.get("codeCiphertext")).toBeUndefined();
+    expect(cancelled.get("lease")).toBeUndefined();
+  }
+  expect((await fresh.invitation.get()).get("state")).toBe("pending");
+  expect((await fresh.job.get()).get("state")).toBe("ready");
+  expect((await fresh.job.get()).get("codeCiphertext")).toBe("synthetic-code");
 });
 
 test("the email worker retries a generic message with the same provider key", async () => {

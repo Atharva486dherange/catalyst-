@@ -1,6 +1,6 @@
 import "server-only";
 import { Timestamp } from "firebase-admin/firestore";
-import type { DocumentData, DocumentSnapshot, Transaction } from "firebase-admin/firestore";
+import type { DocumentData, DocumentSnapshot, Query, Transaction } from "firebase-admin/firestore";
 import type { ApiBody, ApiQuery } from "@/shared/contracts/api";
 import { canRespond } from "@/functions/src/care-circle/task";
 import { hour } from "@/functions/src/medications/recurrence";
@@ -9,6 +9,7 @@ import type { CircleAccess, MutationContext, PageInput } from "./firestore";
 import { applyRange } from "./medications";
 
 interface Range extends PageInput { from?: string; to?: string }
+interface EscalationQuery extends PageInput { status?: "unresolved" | "open" | "claimed" | "resolved" }
 
 function appointment(id: string, record: DocumentData) {
   return {
@@ -64,11 +65,17 @@ function taskData(id: string, record: DocumentData) {
   };
 }
 
-export function listEscalations(tx: Transaction, scope: CircleAccess, input: PageInput) {
-  const ref = scope.ref.collection("escalations");
+export function listEscalations(tx: Transaction, scope: CircleAccess, input: EscalationQuery) {
+  const escalations = scope.ref.collection("escalations");
+  let query: Query = escalations;
+  if (input.status === "unresolved") {
+    query = query.where("state", "in", ["open", "claimed"]);
+  } else if (input.status) {
+    query = query.where("state", "==", input.status);
+  }
   return page({
-    tx, query: ref.orderBy("openedAt", "desc").orderBy(byId, "desc"), input,
-    scope: ["escalations", scope.ref.id], reference: (id) => ref.doc(id),
+    tx, query: query.orderBy("openedAt", "desc").orderBy(byId, "desc"), input,
+    scope: ["escalations", scope.ref.id, input.status], reference: (id) => escalations.doc(id),
     present: (doc) => taskData(doc.id, exists(doc)),
   });
 }
