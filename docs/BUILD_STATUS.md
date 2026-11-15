@@ -21,7 +21,9 @@
 - Lint, strict type checking, and the Next.js and Functions builds passed.
 - All 12 tests passed across the contract and recurrence units, Firestore rules, HTTP health check, and backend emulator suites.
 - The backend suite verified consent revocation, duplicate-report protection, independent verification, task ownership, and reminder retry deduplication.
+- Both scheduled workers registered in the Functions and Pub/Sub emulators.
 - Both production dependency audits reported zero known vulnerabilities at verification time.
+- Local verification used Node.js 24 and Java 21.
 
 ## Development
 

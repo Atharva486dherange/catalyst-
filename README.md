@@ -20,7 +20,7 @@ npm run emulators
 
 In a second terminal, run `npm run dev`. The health check is available at [the local health endpoint](http://localhost:3000/api/v1/health). The [Emulator UI](http://127.0.0.1:4000) is available while Firebase runs. Use Firebase Authentication's local emulator for sign-in. Protected routes expect the user's Firebase ID token as described in the API contract.
 
-`npm run emulators:functions` also builds and discovers both scheduled workers. Use the integration suites to exercise their logic against Firestore on demand.
+`npm run emulators:functions` starts Functions and Pub/Sub and registers both scheduled workers. Cloud Scheduler runs the production schedule. Use the integration suites to exercise the workers against Firestore on demand.
 
 ## Verification
 
