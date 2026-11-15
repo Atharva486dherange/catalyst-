@@ -10,13 +10,15 @@ export default defineConfig({
   testDir: "./tests/e2e",
   testMatch: emulatorTests ? "backend.spec.ts" : "health.spec.ts",
   timeout: 90_000,
-  use: { baseURL },
+  use: { baseURL, launchOptions: { executablePath: process.env.SAATHI_UI_BROWSER_PATH } },
   webServer: {
     command: `npm run dev -- --hostname 127.0.0.1 --port ${port}`,
     url: `${baseURL}/api/v1/health`,
     reuseExistingServer: false,
     env: emulatorTests ? {
       FIREBASE_PROJECT_ID: "demo-saathi",
+      NEXT_PUBLIC_FIREBASE_PROJECT_ID: "demo-saathi",
+      NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_URL: `http://${process.env.FIREBASE_AUTH_EMULATOR_HOST}`,
       INVITATION_ENCRYPTION_KEY: process.env.TEST_INVITATION_KEY!,
       GEMINI_ENABLE_PRESCRIPTION_EXTRACTION: "false",
     } : undefined,

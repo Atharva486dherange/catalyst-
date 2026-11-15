@@ -1,7 +1,8 @@
 # 🌿 SAATHI
 ### Care That Stays Close, Even When Family Lives Far Away.
 
-**An AI-Powered, Voice-First Elderly Care & Medication Coordination Platform**  
+**Medication coordination with read-aloud guidance and caregiver follow-up**
+
 *Built for PromptWars × Catalyst — Elderly Care & Medication Management Challenge*
 
 ---
@@ -18,107 +19,59 @@ Elderly individuals face compounding challenges managing chronic medications:
 
 ---
 
-## 💡 The Solution: 3-Pillar Care Ecosystem
+## What works in the app
 
-SAATHI connects three vital participants:
-1. **The Older Adult**: Interacts through natural voice in their native language (Hindi, Marathi, English) and gets AI camera pill safety checks.
-2. **The Care Circle (Family & Caregivers)**: Designated caregivers and family members receive actionable tasks when a dose is missed or discrepant.
-3. **The Healthcare Provider**: Receives clean, un-tampered adherence data and visit summaries for medical follow-ups.
+| Workflow | Current behavior |
+| --- | --- |
+| Patient and caregiver accounts | Firebase sign-in, patient profile creation, scoped invitations, and access revocation. |
+| My Day | Time-zone-aware dose records, upcoming appointments, read-aloud prompts, and explicit dose confirmation. |
+| Care Circle | A help request or discrepancy opens a follow-up task. An eligible caregiver can claim and resolve it. Task resolution preserves dose evidence. |
+| Medicines and schedules | Patients can add a medicine and set a daily schedule. The API also supports editing, ending schedules, and archiving. |
+| Prescription intelligence | The backend can extract draft prescription fields with Gemini when configured. Patient review and medication writes use separate actions. |
 
----
+Hosted Firebase provisioning and live Resend and Gemini verification are pending. Camera pill recognition, multilingual speech input, doctor chat, visit summaries, stock, and trend charts are roadmap items.
 
-## ✨ Key Capabilities
+## Local demo
 
-```mermaid
-flowchart TD
-    subgraph ElderExperience ["1. Elder Experience (Voice & Camera)"]
-        Voice["🎙️ Multilingual Voice Guidance<br/>(Hindi, Marathi, English)"]
-        Scan["📷 AI Pill & Blister Check<br/>(Gemini Multimodal Vision)"]
-        Confirm["✅ Explicit Confirmation<br/>(1-Tap or Voice 'Haan le li')"]
-    end
+1. Follow the local quickstart below to start Firebase Auth and Firestore and the Next.js dev server.
+2. In a third terminal, run `npm run demo:seed`. It prints two synthetic accounts and adds two due doses to the local emulators.
+3. Open [Saathi](http://localhost:3000). Sign in as the patient. Report one dose and use **Ask for help** on the other.
+4. Open an incognito window and sign in as the caregiver. Claim the task, choose an outcome, and resolve it.
+5. In the patient window, open **Care Circle** and refresh. The task shows **Resolved**. The dose remains **Needs review** until separately verified.
 
-    subgraph CareCircle ["2. Care Circle & Escalation"]
-        Missed["⚠️ Missed / Discrepant Dose"]
-        Task["📋 Actionable Care Task<br/>(Daughter/Caregiver Queue)"]
-        Resolve["🤝 Claim & Resolve Check-In<br/>(Evidence Preserved Intact)"]
-    end
-
-    subgraph HealthcarePlatform ["3. Healthcare Insights & Safety"]
-        Adherence["📊 Adherence Trends & Streaks"]
-        Audit["🔒 Immutable HIPAA-style Audit Trail"]
-        Doctor["🩺 Doctor Visit Summaries"]
-    end
-
-    Voice --> Confirm
-    Scan --> Confirm
-    Confirm -- Discrepancy / Timeout --> Missed
-    Missed --> Task --> Resolve
-    Confirm -- Success --> Adherence
-    Resolve --> Audit
-    Adherence --> Doctor
-```
-
-### 1. 🎙️ Voice-First & Multilingual Accessibility (Module 4)
-- Natural audio reminders in Indian languages: Hindi, Marathi, English, and Hinglish.
-- Spoken confirmation flow: Saathi repeats the exact medicine and dose for verbal confirmation (*"Aapne Amlodipine 5mg le li?"*).
-- Confused or uncertain responses route automatically to the Care Circle.
-
-### 2. 📷 AI Pill & Prescription Verification (Module 6)
-- Powered by Google Gemini multimodal vision.
-- Scans paper prescriptions, blister packs, and loose pills to verify drug name, dosage, and expiry.
-- **Safety Gate**: Warns immediately if the wrong medication is picked up (e.g. evening Metformin in the morning instead of Amlodipine).
-
-### 3. 🤝 Care Circle — From Reminders to Coordinated Care (Module 3)
-- When a scheduled dose passes its 1-hour review window or has a reported discrepancy, SAATHI automatically opens an **Escalation Task**.
-- Eligible caregivers receive instant alerts, claim the task, call the elder, and record check-in outcomes (`checked_in`, `referred_for_review`, or `unable_to_reach`).
-- **Evidence Integrity**: Resolving a task records care intervention without faking or overwriting actual dose intake data.
-- **Unresolved Filter**: Instant access to active unresolved tasks (`?status=unresolved`).
-
-### 4. 💊 Resilient Medication & Schedule Management (Module 2)
-- Time-zone aware scheduling with 14-day rolling materialization.
-- Separate, tamper-proof tracking of patient-reported time vs server transaction timestamps.
-- Idempotent mutations protected by 24-hour client UUIDv4 keys.
-
-### 5. 📊 Family Insights & Doctor Visit Summaries (Modules 5 & 7)
-- Mutual exclusive adherence calculations: `scheduled`, `patient_reported`, `verified`, `needs_review`, `missed`.
-- One-click visit summary generation for upcoming doctor appointments.
-
----
-
-## 📱 Interactive Prototype
-
-Test the live dual-view interactive demonstration:
-- **Open [`saathi_hackathon_ui.html`](saathi_hackathon_ui.html)** directly in your browser.
-- Experience the side-by-side **Elder View** (large touch targets, voice prompts, pill scanner) and **Caregiver View** (task claims, real-time alerts, adherence scores).
+[The original HTML pitch board](saathi_hackathon_ui.html) illustrates additional product ideas.
 
 ---
 
 ## 🏗️ Technical Architecture & Backend Baseline
 
-The backend is built as a cloud-ready, enterprise-grade healthcare API:
+The app and API use these services.
 - **Framework**: Next.js 16 (App Router / Turbopack), TypeScript 5.9.
 - **Security & Database**: Firebase Authentication (ID Token verification), Cloud Firestore with strict security rules, Cloud Functions (Pub/Sub & Scheduler).
-- **AI Intelligence**: Gemini 1.5/2.0 multimodal document and vision extraction with human-in-the-loop candidate review.
+- **AI Intelligence**: Optional Gemini prescription document extraction with patient review.
 - **Reliability & Idempotency**: Transactional leases, deduplicated Pub/Sub sweeps, and 24-hour cryptographic idempotency keys.
 - **API Surface**: 34 authenticated operations + public health check (`/api/v1/health`).
 
 ---
 
-## 🧪 Verified Test Suite (14 Passing Tests)
+## 🧪 Verification
 
-All modules are covered by automated unit, security rule, and end-to-end emulator tests:
+Run the unit, rules, build, and API checks locally.
 
 ```sh
-npm test              # 7 unit tests (contracts, time-zone recurrence, schemas)
-npm run test:rules    # 2 Firestore client security rules tests (Java 25 JBR)
-npm run test:backend  # 5 backend emulator tests (gating, Care Circle escalation, invitation sweep, retries)
-npm run lint          # 0 ESLint warnings
-npm run typecheck     # 0 TypeScript errors
-npm run build         # Next.js 16 production build succeeded
-npm --prefix functions run build # Cloud Functions compilation succeeded
+npm test              # Contract and time-zone recurrence unit tests
+npm run test:rules    # Firestore client security rules tests
+npm run test:e2e      # Public HTTP health check
+npm run test:backend  # Auth and Firestore emulator tests
+npm run lint
+npm run typecheck
+npm run build
+npm --prefix functions run build
 ```
 
 ---
+
+To include the two-account browser flow, install Chromium with `npx playwright install chromium`, set `SAATHI_TEST_UI=1` in your shell, and run `npm run test:backend`. To use an existing Chromium-based browser, set `SAATHI_UI_BROWSER_PATH` to its executable. In PowerShell use `$env:SAATHI_TEST_UI = "1"` and run `npm.cmd` if execution policy blocks `npm.ps1`.
 
 ## ⚙️ Local Development Quickstart
 
@@ -151,6 +104,7 @@ npm run emulators
 npm run dev
 ```
 
+- Connected app: `http://localhost:3000`
 - Public Health Check: `http://localhost:3000/api/v1/health`
 - Firebase Emulator Suite UI: `http://127.0.0.1:4000`
 
@@ -163,7 +117,7 @@ Follow the deployment checklist for Google Cloud & Firebase:
    ```bash
    npx firebase deploy --only firestore:rules,firestore:indexes --project YOUR_PROJECT_ID
    ```
-2. **App Hosting**: Connect GitHub repository to Firebase App Hosting. Set server runtime secrets (`GEMINI_API_KEY`, `INVITATION_ENCRYPTION_KEY`).
+2. **App Hosting**: Connect the repository to Firebase App Hosting. Enable Firebase email/password authentication and set the web app values from .env.example at build time. Use the hosted project ID and omit emulator settings. Set server runtime secrets (`GEMINI_API_KEY`, `INVITATION_ENCRYPTION_KEY`).
 3. **Cloud Functions & Scheduler**: Deploy scheduled sweep workers:
    ```bash
    npx firebase deploy --only functions --project YOUR_PROJECT_ID

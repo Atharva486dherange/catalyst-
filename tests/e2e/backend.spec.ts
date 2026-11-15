@@ -1,6 +1,6 @@
 import { createDecipheriv, createHash, randomUUID } from "node:crypto";
 import { expect, test } from "@playwright/test";
-import type { APIRequestContext } from "@playwright/test";
+import type { APIRequestContext, Page } from "@playwright/test";
 import { createRequire } from "node:module";
 import { resolve } from "node:path";
 import { apiContracts } from "../../shared/contracts/api";
@@ -24,7 +24,7 @@ function emulators() {
   return { auth: getAuth(app), db: getFirestore(app), authHost };
 }
 
-interface Actor { uid: string; email: string; token: string }
+interface Actor { uid: string; email: string; password: string; token: string }
 
 async function account(env: ReturnType<typeof emulators>, name: string): Promise<Actor> {
   const email = `${name}-${randomUUID()}@example.test`;
@@ -37,7 +37,7 @@ async function account(env: ReturnType<typeof emulators>, name: string): Promise
   expect(response.ok).toBe(true);
   const { idToken } = await response.json();
   expect(typeof idToken).toBe("string");
-  return { uid: user.uid, email, token: idToken };
+  return { uid: user.uid, email, password, token: idToken };
 }
 
 function caller(request: APIRequestContext, actor: Actor) {
@@ -64,6 +64,99 @@ async function invitationCode(env: ReturnType<typeof emulators>, id: string) {
 }
 
 const medicine = { name: "Synthetic example", prescribedAmount: { value: "1.0", unit: "unit" } };
+
+async function browserSignIn(page: Page, actor: Actor) {
+  await page.goto("/");
+  await page.getByLabel("Email address").fill(actor.email);
+  await page.getByLabel("Password").fill(actor.password);
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Sign out" })).toBeVisible();
+}
+
+test.describe("browser Care Circle", () => {
+  test.skip(!process.env.SAATHI_TEST_UI, "Set SAATHI_TEST_UI to run the Chromium workflow.");
+
+  test("patient and caregiver coordinate a dose follow-up through the UI", async ({ browser, request }) => {
+    test.setTimeout(120_000);
+    const env = emulators();
+    const [patient, caregiver] = await Promise.all([account(env, "browser-patient"), account(env, "browser-caregiver")]);
+    const patientPage = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    const caregiverPage = await browser.newPage();
+    try {
+      await browserSignIn(patientPage, patient);
+      await patientPage.getByLabel("Patient name").fill("Asha Demo");
+      await patientPage.getByLabel("Time zone").fill("UTC");
+      await patientPage.getByRole("button", { name: "Create circle" }).click();
+      await expect(patientPage.getByRole("heading", { name: "My Day" })).toBeVisible();
+      await patientPage.getByRole("button", { name: "Manage care" }).click();
+      await patientPage.getByLabel("Email address").fill(caregiver.email);
+      await patientPage.getByLabel("Claim and resolve tasks").check();
+      await patientPage.getByRole("button", { name: "Queue invitation" }).click();
+      await expect(patientPage.getByRole("status")).toContainText("Invitation queued");
+
+      const owner = caller(request, patient);
+      const circles = apiContracts.listCircles.response.parse(await (await owner.get("/circles")).json()).data.items;
+      const circle = circles[0]!;
+      const path = `/circles/${circle.id}`;
+      const invitation = apiContracts.listInvitations.response.parse(await (await owner.get(`${path}/invitations`)).json()).data.items[0]!;
+      await browserSignIn(caregiverPage, caregiver);
+      await caregiverPage.getByLabel("Invitation code").fill(await invitationCode(env, invitation.id));
+      await caregiverPage.getByRole("button", { name: "Join Care Circle" }).click();
+      await expect(caregiverPage.getByRole("heading", { name: "Care Circle" })).toBeVisible();
+
+      const now = Date.now();
+      const midnightUtc = Math.floor(now / (24 * hour)) * 24 * hour;
+      const scheduledAt = Timestamp.fromMillis(Math.max(midnightUtc, now - 5 * 60_000));
+      const doses = env.db.collection("circles").doc(circle.id).collection("doseOccurrences");
+      const mismatch = doses.doc();
+      const help = doses.doc();
+      const fixture = {
+        medicationId: "browser-medication", scheduleId: "browser-schedule", scheduledAt,
+        state: "scheduled", patientReport: null, verification: null,
+        createdAt: Timestamp.fromMillis(now - hour), updatedAt: scheduledAt,
+      };
+      await Promise.all([
+        mismatch.set({ ...fixture, medicationSnapshot: { ...medicine, name: "Dose for review" } }),
+        help.set({ ...fixture, medicationSnapshot: { ...medicine, name: "Dose needing help" } }),
+      ]);
+      await patientPage.getByRole("button", { name: "My Day", exact: true }).click();
+      await patientPage.getByRole("button", { name: "Refresh", exact: true }).click();
+      const reviewCard = patientPage.getByRole("article").filter({ hasText: "Dose for review" });
+      await reviewCard.getByRole("button", { name: "Report taken" }).click();
+      await expect(reviewCard.getByRole("button", { name: "Submit dose report" })).toBeDisabled();
+      await reviewCard.getByLabel("Amount taken").fill("2");
+      await reviewCard.getByLabel("I confirm these details are correct.").check();
+      await reviewCard.getByRole("button", { name: "Submit dose report" }).click();
+      await expect(reviewCard.getByText("Needs review", { exact: true })).toBeVisible();
+
+      const helpCard = patientPage.getByRole("article").filter({ hasText: "Dose needing help" });
+      await helpCard.getByRole("button", { name: "Ask for help" }).click();
+      await expect(helpCard.getByRole("status")).toContainText("A follow-up task is available");
+      await caregiverPage.getByRole("button", { name: "Refresh", exact: true }).click();
+      const task = caregiverPage.getByRole("article").filter({ hasText: "Dose needing help follow-up" });
+      await task.getByRole("button", { name: "Claim task" }).click();
+      await expect(task.getByText("Claimed", { exact: true })).toBeVisible();
+      await task.getByLabel("Check-in outcome").selectOption("checked_in");
+      await task.getByRole("button", { name: "Resolve task" }).click();
+      await expect(task.getByText("Resolved", { exact: true })).toBeVisible();
+      await caregiverPage.screenshot({ path: test.info().outputPath("caregiver-task.png") });
+      await caregiverPage.getByLabel("Unresolved only").check();
+      await expect(task).toHaveCount(0);
+      await expect(caregiverPage.getByText("Dose for review follow-up")).toBeVisible();
+
+      await patientPage.screenshot({ path: test.info().outputPath("patient-my-day.png") });
+      await patientPage.getByRole("button", { name: "Care Circle", exact: true }).click();
+      const patientTask = patientPage.getByRole("article").filter({ hasText: "Dose needing help follow-up" });
+      await expect(patientTask.getByText("Resolved", { exact: true })).toBeVisible();
+      const unchanged = apiContracts.getDose.response.parse(await (await owner.get(`${path}/doses/${help.id}`)).json()).data;
+      expect(unchanged.state).toBe("needs_review");
+      expect(unchanged.verifiedAt).toBeNull();
+      expect(await patientPage.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+    } finally {
+      await Promise.all([patientPage.context().close(), caregiverPage.context().close()]);
+    }
+  });
+});
 
 test("consent gates access and dose evidence stays distinct from verification", async ({ request }) => {
   const env = emulators();
