@@ -12,8 +12,9 @@ import { getBrowserAuth } from "@/lib/firebase/browser";
 import { apiContracts } from "@/shared/contracts/api";
 import type { ApiResponse } from "@/shared/contracts/api";
 import { careList, careRequest, messageFor } from "./care-client";
-import { DoseCard, TaskCard, formatDate, formatTime } from "./care-records";
+import { AppointmentCard, AppointmentCreateForm, DoseCard, TaskCard } from "./care-records";
 import type { Dose, Task } from "./care-records";
+import { PrescriptionExtractionSection } from "./care-extraction";
 import { CircleOnboarding, PatientSettings } from "./care-setup";
 
 type Circle = ApiResponse<"listCircles">["data"]["items"][number];
@@ -108,7 +109,7 @@ async function readWorkspace(user: User, path: string, patient: boolean, unresol
   const [doses, tasks, appointments, medications, members] = await Promise.all([
     careList(user, `${path}/doses?${dateRange(clock)}`, apiContracts.listDoses.response),
     careList(user, `${path}/escalations${unresolvedOnly ? "?status=unresolved" : ""}`, apiContracts.listEscalations.response),
-    careRequest(user, `${path}/appointments?limit=3`, apiContracts.listAppointments.response),
+    careList(user, `${path}/appointments`, apiContracts.listAppointments.response),
     patient ? careList(user, `${path}/medications`, apiContracts.listMedications.response) : [],
     patient ? careList(user, `${path}/members`, apiContracts.listMemberships.response) : [],
   ]);
@@ -117,7 +118,7 @@ async function readWorkspace(user: User, path: string, patient: boolean, unresol
     today: clock.toPlainDate().toString(),
     dateLabel: new Intl.DateTimeFormat("en", { weekday: "long", month: "long", day: "numeric", timeZone: profile.timeZone }).format(clock.epochMilliseconds),
     loadedAt: clock.epochMilliseconds,
-    doses, tasks, appointments: appointments.items, medications, members,
+    doses, tasks, appointments, medications, members,
   };
 }
 
@@ -184,13 +185,35 @@ function CircleView({ user, circle }: { user: User; circle: Circle }) {
                 <div><dt>Unresolved care tasks</dt><dd>{activeTasks}</dd></div></dl>
               <button type="button" className="text-button" onClick={() => { setTab("tasks"); refresh(); }}>View Care Circle</button>
             </section>
-            <section className="surface">
-              <h2>Upcoming appointments</h2>
-              {data.appointments.length ? data.appointments.map((item) => <div className="appointment" key={item.id}>
-                <strong>{item.title}</strong><p>{formatDate(item.startsAt, data.profile.timeZone)} · {formatTime(item.startsAt, data.profile.timeZone)}</p>
-                {item.location && <p>{item.location}</p>}
-              </div>) : <p>No upcoming appointments.</p>}
+            <section className="surface" aria-labelledby="appointments-heading">
+              <div className="section-heading">
+                <h2 id="appointments-heading">Upcoming appointments</h2>
+                {patient && (
+                  <AppointmentCreateForm
+                    user={user}
+                    path={path}
+                    timeZone={data.profile.timeZone}
+                    refresh={refresh}
+                  />
+                )}
+              </div>
+              {data.appointments.length ? (
+                data.appointments.map((item) => (
+                  <AppointmentCard
+                    key={item.id}
+                    user={user}
+                    path={path}
+                    appointment={item}
+                    timeZone={data.profile.timeZone}
+                    patient={patient}
+                    refresh={refresh}
+                  />
+                ))
+              ) : (
+                <p style={{ marginTop: ".5rem" }}>No upcoming appointments.</p>
+              )}
             </section>
+            {patient && <PrescriptionExtractionSection user={user} path={path} />}
           </aside>
         </div>
       )}
@@ -249,6 +272,15 @@ export function CareWorkspace() {
   const [session, setSession] = useState<{ auth: Auth; user: User | null } | null>(null);
   const [unavailable, setUnavailable] = useState(false);
   const [error, setError] = useState("");
+  const [bigText, setBigText] = useState(false);
+
+  function toggleBigText() {
+    const next = !bigText;
+    setBigText(next);
+    if (typeof document !== "undefined") {
+      document.body.classList.toggle("big", next);
+    }
+  }
 
   useEffect(() => {
     let active = true;
@@ -265,15 +297,46 @@ export function CareWorkspace() {
   return (
     <>
       <a className="skip" href="#main">Skip to main content</a>
-      <header className="site-header"><div className="shell header-content">
-        <Brand />
-        {session?.user && <div className="account"><span>{session.user.email}</span>
-          <button type="button" className="secondary" onClick={() => {
-            setError("");
-            void signOut(session.auth).catch((error: unknown) => setError(messageFor(error)));
-          }}>Sign out</button>
-        </div>}
-      </div></header>
+      <header className="site-header">
+        <div className="shell header-content">
+          <Brand />
+          <div className="header-actions">
+            <a
+              href="/saathi_hackathon_ui.html"
+              className="tool preview-link"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Sample preview
+            </a>
+            <button
+              type="button"
+              className={`tool ${bigText ? "active" : ""}`}
+              onClick={toggleBigText}
+              aria-pressed={bigText}
+            >
+              Larger text
+            </button>
+            {session?.user && (
+              <div className="account">
+                <span>{session.user.email}</span>
+                <button
+                  type="button"
+                  className="secondary"
+                  onClick={() => {
+                    setError("");
+                    void signOut(session.auth).catch((error: unknown) =>
+                      setError(messageFor(error))
+                    );
+                  }}
+                >
+                  Sign out
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </header>
       {error && <p className="error shell" role="alert">{error}</p>}
       {session?.user ? <SignedIn key={session.user.uid} user={session.user} /> :
         session ? <SignIn auth={session.auth} /> :

@@ -203,3 +203,283 @@ export function TaskCard({ user, path, task, dose, timeZone, canRespond, refresh
     </article>
   );
 }
+
+export type Appointment = ApiResponse<"listAppointments">["data"]["items"][number];
+
+export function formatDateTimeLocal(instant: string, timeZone: string) {
+  try {
+    return Temporal.Instant.from(instant)
+      .toZonedDateTimeISO(timeZone)
+      .toPlainDateTime()
+      .toString({ smallestUnit: "second" });
+  } catch {
+    return "";
+  }
+}
+
+export function AppointmentCard({
+  user,
+  path,
+  appointment,
+  timeZone,
+  patient,
+  refresh,
+}: {
+  user: User;
+  path: string;
+  appointment: Appointment;
+  timeZone: string;
+  patient: boolean;
+  refresh: () => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [problem, setProblem] = useState("");
+  const mutation = useCareMutation(user, refresh);
+
+  async function onSave(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setProblem("");
+    const data = new FormData(event.currentTarget);
+    const title = String(data.get("title")).trim();
+    const location = String(data.get("location") || "").trim();
+    let startsAt: string;
+    let endsAt: string;
+    try {
+      startsAt = Temporal.PlainDateTime.from(String(data.get("startsAt")))
+        .toZonedDateTime(timeZone, { disambiguation: "reject" })
+        .toInstant()
+        .toString({ smallestUnit: "millisecond" });
+      endsAt = Temporal.PlainDateTime.from(String(data.get("endsAt")))
+        .toZonedDateTime(timeZone, { disambiguation: "reject" })
+        .toInstant()
+        .toString({ smallestUnit: "millisecond" });
+    } catch {
+      setProblem("Provide valid dates and times in the Care Circle’s time zone.");
+      return;
+    }
+    if (Date.parse(endsAt) <= Date.parse(startsAt)) {
+      setProblem("The appointment end time must follow the start time.");
+      return;
+    }
+    const updated = await mutation.run(
+      `${path}/appointments/${appointment.id}`,
+      apiContracts.updateAppointment.response,
+      { title, startsAt, endsAt, ...(location ? { location } : {}) },
+      "PUT"
+    );
+    if (updated) {
+      setEditing(false);
+    }
+  }
+
+  async function onCancel() {
+    await mutation.run(
+      `${path}/appointments/${appointment.id}/cancel`,
+      apiContracts.cancelAppointment.response
+    );
+  }
+
+  return (
+    <div className="appointment">
+      <div className="record-heading">
+        <div>
+          <strong>{appointment.title}</strong>
+          <p>
+            {formatDate(appointment.startsAt, timeZone)} ·{" "}
+            {formatTime(appointment.startsAt, timeZone)} –{" "}
+            {formatTime(appointment.endsAt, timeZone)}
+          </p>
+          {appointment.location && <p>{appointment.location}</p>}
+        </div>
+        <span className={`state ${appointment.state}`}>
+          {appointment.state === "scheduled" ? "Scheduled" : "Cancelled"}
+        </span>
+      </div>
+      {patient && appointment.state === "scheduled" && !editing && (
+        <div className="actions" style={{ marginTop: ".55rem" }}>
+          <button
+            type="button"
+            className="secondary"
+            onClick={() => setEditing(true)}
+          >
+            Edit
+          </button>
+          <button
+            type="button"
+            className="text-button"
+            onClick={onCancel}
+            disabled={mutation.pending}
+          >
+            Cancel appointment
+          </button>
+        </div>
+      )}
+      {editing && (
+        <form className="inline-form" onSubmit={onSave} style={{ marginTop: ".75rem" }}>
+          <label>
+            Title
+            <input name="title" defaultValue={appointment.title} required />
+          </label>
+          <div className="form-columns">
+            <label>
+              Starts at
+              <input
+                name="startsAt"
+                type="datetime-local"
+                step="1"
+                defaultValue={formatDateTimeLocal(appointment.startsAt, timeZone)}
+                required
+              />
+            </label>
+            <label>
+              Ends at
+              <input
+                name="endsAt"
+                type="datetime-local"
+                step="1"
+                defaultValue={formatDateTimeLocal(appointment.endsAt, timeZone)}
+                required
+              />
+            </label>
+          </div>
+          <label>
+            Location (optional)
+            <input name="location" defaultValue={appointment.location ?? ""} />
+          </label>
+          <div className="actions">
+            <button type="submit" disabled={mutation.pending}>
+              Save changes
+            </button>
+            <button
+              type="button"
+              className="secondary"
+              onClick={() => setEditing(false)}
+              disabled={mutation.pending}
+            >
+              Cancel
+            </button>
+          </div>
+          {problem && (
+            <p className="error" role="alert">
+              {problem}
+            </p>
+          )}
+        </form>
+      )}
+      {mutation.error && <p className="error" role="alert">{mutation.error}</p>}
+    </div>
+  );
+}
+
+export function AppointmentCreateForm({
+  user,
+  path,
+  timeZone,
+  refresh,
+}: {
+  user: User;
+  path: string;
+  timeZone: string;
+  refresh: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [problem, setProblem] = useState("");
+  const mutation = useCareMutation(user, refresh);
+
+  async function onSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setProblem("");
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    const title = String(data.get("title")).trim();
+    const location = String(data.get("location") || "").trim();
+    let startsAt: string;
+    let endsAt: string;
+    try {
+      startsAt = Temporal.PlainDateTime.from(String(data.get("startsAt")))
+        .toZonedDateTime(timeZone, { disambiguation: "reject" })
+        .toInstant()
+        .toString({ smallestUnit: "millisecond" });
+      endsAt = Temporal.PlainDateTime.from(String(data.get("endsAt")))
+        .toZonedDateTime(timeZone, { disambiguation: "reject" })
+        .toInstant()
+        .toString({ smallestUnit: "millisecond" });
+    } catch {
+      setProblem("Provide valid dates and times in the Care Circle’s time zone.");
+      return;
+    }
+    if (Date.parse(endsAt) <= Date.parse(startsAt)) {
+      setProblem("The appointment end time must follow the start time.");
+      return;
+    }
+    const created = await mutation.run(
+      `${path}/appointments`,
+      apiContracts.createAppointment.response,
+      { title, startsAt, endsAt, ...(location ? { location } : {}) }
+    );
+    if (created) {
+      form.reset();
+      setOpen(false);
+    }
+  }
+
+  if (!open) {
+    return (
+      <div style={{ marginTop: ".75rem" }}>
+        <button
+          type="button"
+          className="secondary"
+          onClick={() => setOpen(true)}
+        >
+          + Add appointment
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <form className="inline-form" onSubmit={onSubmit} style={{ marginTop: ".75rem" }}>
+      <label>
+        Title
+        <input name="title" placeholder="Dr. Sharma – Cardiology" required />
+      </label>
+      <div className="form-columns">
+        <label>
+          Starts at
+          <input name="startsAt" type="datetime-local" step="1" required />
+        </label>
+        <label>
+          Ends at
+          <input name="endsAt" type="datetime-local" step="1" required />
+        </label>
+      </div>
+      <label>
+        Location (optional)
+        <input name="location" placeholder="City Clinic, Room 204" />
+      </label>
+      <div className="actions">
+        <button type="submit" disabled={mutation.pending}>
+          Save appointment
+        </button>
+        <button
+          type="button"
+          className="secondary"
+          onClick={() => setOpen(false)}
+          disabled={mutation.pending}
+        >
+          Cancel
+        </button>
+      </div>
+      {problem && (
+        <p className="error" role="alert">
+          {problem}
+        </p>
+      )}
+      {mutation.error && (
+        <p className="error" role="alert">
+          {mutation.error}
+        </p>
+      )}
+    </form>
+  );
+}

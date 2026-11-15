@@ -151,6 +151,53 @@ test.describe("browser Care Circle", () => {
       const unchanged = apiContracts.getDose.response.parse(await (await owner.get(`${path}/doses/${help.id}`)).json()).data;
       expect(unchanged.state).toBe("needs_review");
       expect(unchanged.verifiedAt).toBeNull();
+      await patientPage.getByRole("button", { name: "My Day", exact: true }).click();
+
+      await patientPage.getByRole("button", { name: "Add appointment" }).click();
+      await patientPage.getByLabel("Title", { exact: true }).fill("Synthetic clinic visit");
+      await patientPage.getByLabel("Starts at").fill(new Date(now + hour).toISOString().slice(0, 19));
+      await patientPage.getByLabel("Ends at").fill(new Date(now + 2 * hour).toISOString().slice(0, 19));
+      await patientPage.getByRole("button", { name: "Save appointment", exact: true }).click();
+      const visit = patientPage.locator(".appointment").filter({ hasText: "Synthetic clinic visit" });
+      await visit.getByRole("button", { name: "Edit", exact: true }).click();
+      await visit.getByLabel("Location (optional)").fill("Synthetic clinic room");
+      await visit.getByRole("button", { name: "Save changes", exact: true }).click();
+      await expect(visit.getByText("Synthetic clinic room")).toBeVisible();
+      await visit.getByRole("button", { name: "Cancel appointment", exact: true }).click();
+      await expect(visit).toHaveCount(0);
+
+      await patientPage.getByRole("button", { name: "Upload prescription document" }).click();
+      await patientPage.setInputFiles('input[name="file"]', {
+        name: "prescription.pdf",
+        mimeType: "application/pdf",
+        buffer: Buffer.from("%PDF-1.4\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF"),
+      });
+      await patientPage.getByLabel("I consent to AI-assisted prescription text extraction.").check();
+      await patientPage.getByRole("button", { name: "Extract medicines with AI" }).click();
+      await expect(patientPage.getByText("AI Extraction Unavailable")).toBeVisible();
+
+      const extracted = env.db.collection("circles").doc(circle.id).collection("extractions").doc();
+      const items = [{ name: null, amountText: null, scheduleText: null }];
+      const updatedAt = Timestamp.now();
+      await extracted.set({ state: "pending_review", items, reviewedItems: null, createdAt: updatedAt, updatedAt });
+      // Simulate provider output while still saving the review through the emulator API.
+      await patientPage.route(`**/api/v1${path}/prescription-extractions`, (route) => route.fulfill({
+        status: 201,
+        json: { data: { id: extracted.id, state: "pending_review", items, reviewedItems: null, updatedAt: updatedAt.toDate().toISOString() } },
+      }), { times: 1 });
+      await patientPage.getByRole("button", { name: "Extract medicines with AI" }).click();
+      await expect(patientPage.getByText("Extracted amount: Unreadable")).toBeVisible();
+      await expect(patientPage.getByLabel("Medicine name", { exact: true })).toHaveValue("");
+      await expect(patientPage.getByLabel("Amount", { exact: true })).toHaveValue("");
+      await expect(patientPage.getByLabel("Unit", { exact: true })).toHaveValue("");
+      await patientPage.getByLabel("Medicine name", { exact: true }).fill("Reviewed sample medicine");
+      await patientPage.getByLabel("Amount", { exact: true }).fill("2");
+      await patientPage.getByLabel("Unit", { exact: true }).fill("tablet");
+      await patientPage.getByRole("button", { name: "Save reviewed draft" }).click();
+      await expect(patientPage.getByText("Prescription draft saved separately from active medication records.")).toBeVisible();
+      expect((await extracted.get()).get("state")).toBe("reviewed");
+      expect((await env.db.collection("circles").doc(circle.id).collection("medications").get()).size).toBe(0);
+
       expect(await patientPage.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
     } finally {
       await Promise.all([patientPage.context().close(), caregiverPage.context().close()]);

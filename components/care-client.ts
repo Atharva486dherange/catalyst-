@@ -6,7 +6,11 @@ import { useRef, useState } from "react";
 import type { ZodType } from "zod";
 import { apiErrorSchema } from "@/shared/contracts/api";
 
-class RequestError extends Error {}
+export class RequestError extends Error {
+  constructor(message: string, public readonly status: number) {
+    super(message);
+  }
+}
 
 export function messageFor(error: unknown) {
   if (error instanceof RequestError) return error.message;
@@ -24,21 +28,22 @@ type Mutation = { method: "POST"; key: string; body?: unknown } | { method: "PUT
 
 export async function careRequest<T>(user: User, path: string, schema: ZodType<{ data: T }>, mutation?: Mutation): Promise<T> {
   const headers = new Headers({ Authorization: `Bearer ${await user.getIdToken()}` });
+  const body = mutation?.body;
   if (mutation) headers.set("Idempotency-Key", mutation.key);
-  if (mutation?.body !== undefined) headers.set("Content-Type", "application/json");
+  if (body !== undefined && !(body instanceof FormData)) headers.set("Content-Type", "application/json");
   const response = await fetch(`/api/v1${path}`, {
     method: mutation?.method ?? "GET",
     headers,
-    body: mutation?.body === undefined ? undefined : JSON.stringify(mutation.body),
+    body: body instanceof FormData ? body : JSON.stringify(body),
     cache: "no-store",
   });
   const value: unknown = await response.json().catch(() => null);
   if (!response.ok) {
     const parsed = apiErrorSchema.safeParse(value);
-    throw new RequestError(parsed.success ? parsed.data.error.message : "The request could not be completed.");
+    throw new RequestError(parsed.success ? parsed.data.error.message : "The request could not be completed.", response.status);
   }
   const result = schema.safeParse(value);
-  if (!result.success) throw new RequestError("Saathi received an unexpected response. Please refresh and try again.");
+  if (!result.success) throw new RequestError("Saathi received an unexpected response. Please refresh and try again.", response.status);
   return result.data.data;
 }
 

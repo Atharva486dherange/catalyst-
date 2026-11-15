@@ -1,897 +1,242 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Saathi — Voice-First Elderly Care & AI Medication Platform</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
-            serif: ['"Fraunces"', 'serif'],
-          },
-          colors: {
-            cream: '#FAF6F0',
-            cardCream: '#FDFBF7',
-            warmAmber: '#FDECC8',
-            forest: '#1B4D3E',
-            forestDark: '#12352A',
-            sage: '#E6F0EC',
-            terracotta: '#D97736',
-          }
-        }
-      }
-    }
-  </script>
-  <style>
-    body {
-      background: radial-gradient(circle at top left, #FDFBF7 0%, #F3ECE1 100%);
-      min-height: 100vh;
-    }
-    .phone-frame {
-      width: 360px;
-      height: 760px;
-      border-radius: 46px;
-      border: 10px solid #1E2421;
-      background: #FAF6F0;
-      box-shadow: 0 25px 60px -15px rgba(27, 77, 62, 0.18), 0 0 0 2px #D6CFC2;
-      position: relative;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      flex-shrink: 0;
-    }
-    .phone-notch {
-      width: 110px;
-      height: 22px;
-      background: #1E2421;
-      border-radius: 0 0 14px 14px;
-      margin: 0 auto;
-    }
-    .no-scrollbar::-webkit-scrollbar {
-      display: none;
-    }
-    .no-scrollbar {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
-    }
-    .pill-3d {
-      width: 58px;
-      height: 124px;
-      border-radius: 999px;
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 18px 30px -8px rgba(37, 99, 235, 0.45), inset -6px -6px 14px rgba(0,0,0,0.18), inset 6px 6px 14px rgba(255,255,255,0.6);
-      animation: floatPill 3s ease-in-out infinite;
-    }
-    .pill-top {
-      height: 50%;
-      background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);
-    }
-    .pill-bottom {
-      height: 50%;
-      background: linear-gradient(135deg, #93C5FD 0%, #60A5FA 100%);
-    }
-    .pill-shine {
-      position: absolute;
-      top: 12px;
-      left: 11px;
-      width: 8px;
-      height: 90px;
-      border-radius: 999px;
-      background: linear-gradient(to bottom, rgba(255,255,255,0.65), rgba(255,255,255,0.05));
-    }
-    @keyframes floatPill {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-7px); }
-    }
-    @keyframes pulseRing {
-      0% { transform: scale(0.95); opacity: 0.7; }
-      50% { transform: scale(1.04); opacity: 0.35; }
-      100% { transform: scale(0.95); opacity: 0.7; }
-    }
-    .scan-ring {
-      animation: pulseRing 2.4s infinite ease-in-out;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Saathi — Voice-first medicine companion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Fraunces:opsz,wght@9..144,600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#EEF3F0;--card:#fff;--ink:#12231F;--mut:#475A54;--teal:#0E5C57;--teald:#0A433F;--mari:#F5B301;--marisoft:#FFF1C2;--ok:#1E7A4C;--oksoft:#E3F3EA;--warn:#A8330F;--warnsoft:#FDEBE4;--line:#D5DFDA;font-size:16px}
+*{box-sizing:border-box;margin:0}
+body{font-family:"Atkinson Hyperlegible",system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.4}
+body.big{--s:1.12}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+.serif{font-family:Fraunces,Georgia,serif;font-weight:600}
+svg.i{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+/* top bar */
+.top{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:12px 24px;background:var(--card);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px;font-size:1.5rem;color:var(--teal)}
+.brand small{font:400 .9rem "Atkinson Hyperlegible";color:var(--mut)}
+.tools{display:flex;gap:8px;flex-wrap:wrap}
+.tool{min-height:44px;padding:0 16px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);font-weight:700;font-size:.95rem}
+.tool[aria-pressed=true]{background:var(--teal);border-color:var(--teal);color:#fff}
+/* stage */
+.stage{display:flex;justify-content:center;padding:28px 12px 48px}
+.phone{width:390px;height:800px;background:var(--bg);border:10px solid #1c2a26;border-radius:48px;display:flex;flex-direction:column;overflow:hidden;flex:none;box-shadow:0 30px 60px -20px rgba(14,92,87,.35)}
+.view{flex:1;overflow-y:auto;padding:16px 16px 24px;scrollbar-width:none}
+.view::-webkit-scrollbar{display:none}
+.scr{display:none;flex-direction:column;gap:14px;font-size:calc(1.0625rem*var(--s,1))}
+.scr.on{display:flex}
+.back{display:flex;align-items:center;gap:6px;min-height:48px;font-weight:700;color:var(--teal)}
+h2{font-size:1.5rem;line-height:1.15}
+.mut{color:var(--mut);font-size:.95em}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px}
+.btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:60px;border-radius:16px;font-weight:700;font-size:1.1em;background:var(--teal);color:#fff}
+.btn:hover{background:var(--teald)}
+.btn.alt{background:var(--card);color:var(--ink);border:2px solid var(--line);min-height:56px}
+.btn.warn{background:var(--warn)}
+.btn.done{background:var(--ok)}
+.row{display:flex;gap:10px}.row>*{flex:1}
+/* hero */
+.hero{background:var(--marisoft);border-left:8px solid var(--mari);border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.hero .when{font-weight:700;display:flex;justify-content:space-between}
+.hero h3{font-size:1.9rem;line-height:1.1}
+/* timeline */
+.tl{list-style:none;padding:0;position:relative}
+.tl li{display:flex;gap:14px;padding:10px 0;align-items:flex-start;position:relative}
+.tl li:not(:last-child)::before{content:"";position:absolute;left:15px;top:44px;bottom:-6px;width:2px;background:var(--line)}
+.dot{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;border:2.5px solid var(--line);background:var(--card);flex:none;color:#fff}
+.dot.taken{background:var(--ok);border-color:var(--ok)}.dot.due{border-color:var(--mari);background:var(--mari);color:var(--ink)}
+.tl b{display:block}.tl .t{margin-left:auto;font-weight:700;white-space:nowrap}
+/* scanner */
+.lens{position:relative;width:220px;height:220px;margin:8px auto;border-radius:50%;background:var(--card);border:3px dashed var(--teal);display:grid;place-items:center}
+.lens::after{content:"";position:absolute;inset:-14px;border-radius:50%;border:2px solid var(--teal);opacity:.35;animation:ring 2.4s ease-in-out infinite}
+.lens.ok{border-style:solid;border-color:var(--ok);background:var(--oksoft)}.lens.ok::after{display:none}
+@keyframes ring{50%{transform:scale(1.06);opacity:.12}}
+/* alerts */
+.note{border-radius:16px;padding:14px;border:2px solid;font-size:1em}
+.note.warn{background:var(--warnsoft);border-color:var(--warn);color:#6e1f08}
+.note.ok{background:var(--oksoft);border-color:var(--ok);color:#124d2f}
+select{width:100%;min-height:56px;border-radius:14px;border:2px solid var(--ink);padding:0 14px;font:700 1.1em "Atkinson Hyperlegible";background:#fff;color:var(--ink)}
+.bar{height:12px;background:var(--line);border-radius:9px;overflow:hidden}.bar i{display:block;height:100%;background:var(--teal);border-radius:9px;transition:width .5s}
+.week{display:flex;justify-content:space-between;text-align:center;font-weight:700;font-size:.9em}
+.week span{display:grid;place-items:center;width:36px;height:36px;border-radius:50%;margin-top:4px;background:var(--ok);color:#fff}.week span.x{background:var(--warnsoft);color:var(--warn);border:2px solid var(--warn)}
+.feed{list-style:none;padding:0;display:flex;flex-direction:column;gap:12px}
+.feed li{display:flex;gap:10px}
+.bub{padding:12px 14px;border-radius:18px;max-width:88%}
+.bub.dr{background:var(--teal);color:#fff;border-top-left-radius:4px}.bub.me{background:var(--card);border:1px solid var(--line);margin-left:auto;border-top-right-radius:4px}
+#msgs{display:flex;flex-direction:column;gap:10px;min-height:330px}
+.chatin{display:flex;gap:8px}.chatin input{flex:1;min-height:56px;border-radius:28px;border:2px solid var(--line);padding:0 18px;font:inherit}
+.chatin button{width:56px;height:56px;border-radius:50%;background:var(--teal);color:#fff;display:grid;place-items:center}
+/* nav */
+nav{display:flex;background:var(--card);border-top:1px solid var(--line);padding:6px 4px 10px}
+nav button{flex:1;min-height:60px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:.8rem;font-weight:700;color:var(--mut);border-radius:14px}
+nav button[aria-current=true]{color:var(--teal);background:var(--oksoft)}
+.toast{position:absolute;left:14px;right:14px;bottom:84px;background:var(--ink);color:#fff;border-radius:16px;padding:12px 14px;display:none;align-items:center;justify-content:space-between;gap:10px;font-weight:700}
+.toast.on{display:flex}.toast button{color:var(--mari);font-weight:700;min-height:44px;padding:0 8px;text-decoration:underline}
+.pw{position:relative;display:flex}
+/* all-screens board */
+body.board .stage{padding:24px}
+body.board .phone{width:100%;max-width:1320px;height:auto;border:0;background:none;box-shadow:none;border-radius:0;overflow:visible}
+body.board .view{overflow:visible;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:24px}
+body.board .scr{display:flex;background:var(--bg);border:8px solid #1c2a26;border-radius:36px;padding:16px;min-height:640px}
+body.board nav,body.board .toast{display:none!important}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media(max-width:440px){.phone{width:100%;border-width:0;border-radius:0;height:calc(100dvh - 120px)}}
+</style>
 </head>
-<body class="font-sans text-stone-800 antialiased selection:bg-forest selection:text-white">
-
-  <!-- Top Hackathon Pitch Control Bar -->
-  <header class="sticky top-0 z-40 backdrop-blur-md bg-[#FAF6F0]/90 border-b border-stone-200/80 px-6 py-3.5">
-    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-2xl bg-forest flex items-center justify-center text-white shadow-sm">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-          </svg>
-        </div>
-        <div>
-          <div class="flex items-center gap-2.5">
-            <h1 class="font-serif text-xl font-bold text-forest tracking-tight">Saathi</h1>
-            <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-sage text-forest border border-forest/15">Unified Hackathon Prototype</span>
-          </div>
-          <p class="text-xs text-stone-500">Voice-First Elderly Care · AI Pill Verification · Care Circle & Telehealth</p>
-        </div>
-      </div>
-
-      <!-- Mode & Screen Controls -->
-      <div class="flex items-center gap-2 bg-stone-200/70 p-1 rounded-xl">
-        <button id="btnModeSingle" onclick="setLayoutMode('single')" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-white text-forest shadow-sm transition">
-          Interactive App Mode
-        </button>
-        <button id="btnModeBoard" onclick="setLayoutMode('board')" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-stone-600 hover:text-stone-900 transition">
-          4-Screen Pitch Board
-        </button>
-      </div>
-
-      <!-- Quick Voice Demo Action -->
-      <div class="flex items-center gap-2.5">
-        <button onclick="speakVoicePrompt('Namaste Aaji! It is 10 AM. Time to take your 5 milligram Amlodipine for blood pressure.')" class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-forest text-white text-xs font-semibold hover:bg-forestDark transition shadow-sm">
-          <span>🔊 Test Voice AI</span>
-        </button>
-      </div>
-    </div>
-  </header>
-
-  <!-- Main Workspace -->
-  <main class="max-w-[1540px] mx-auto px-4 sm:px-6 py-8">
-
-    <!-- Screen Jump Pills (Visible in Single Interactive Mode) -->
-    <div id="singleNavPills" class="flex flex-wrap items-center justify-center gap-2 mb-7">
-      <button onclick="switchScreen('home')" id="pill-home" class="screen-pill px-4 py-2 rounded-full text-xs font-semibold bg-forest text-white shadow-sm transition">
-        1. My Day (Elder View)
-      </button>
-      <button onclick="switchScreen('scanner')" id="pill-scanner" class="screen-pill px-4 py-2 rounded-full text-xs font-semibold bg-white text-stone-600 border border-stone-200 hover:border-forest/40 transition">
-        2. AI Pill Scanner
-      </button>
-      <button onclick="switchScreen('confirm')" id="pill-confirm" class="screen-pill px-4 py-2 rounded-full text-xs font-semibold bg-white text-stone-600 border border-stone-200 hover:border-forest/40 transition">
-        3. Dose Discrepancy Check
-      </button>
-      <button onclick="switchScreen('adherence')" id="pill-adherence" class="screen-pill px-4 py-2 rounded-full text-xs font-semibold bg-white text-stone-600 border border-stone-200 hover:border-forest/40 transition">
-        4. Meds & Refill Tracker
-      </button>
-      <button onclick="switchScreen('family')" id="pill-family" class="screen-pill px-4 py-2 rounded-full text-xs font-semibold bg-white text-stone-600 border border-stone-200 hover:border-forest/40 transition">
-        5. Family Care Circle (Priya)
-      </button>
-      <button onclick="switchScreen('chat')" id="pill-chat" class="screen-pill px-4 py-2 rounded-full text-xs font-semibold bg-white text-stone-600 border border-stone-200 hover:border-forest/40 transition">
-        6. Doctor Telehealth Chat
-      </button>
-    </div>
-
-    <!-- SINGLE INTERACTIVE SIMULATOR VIEW -->
-    <section id="singleSimulatorView" class="flex flex-col lg:flex-row items-center justify-center gap-10">
-
-      <!-- Left Context Panel for Hackathon Demo -->
-      <div class="w-full max-w-sm space-y-4 order-2 lg:order-1">
-        <div class="bg-white/90 backdrop-blur rounded-3xl p-6 border border-stone-200/80 shadow-sm">
-          <span class="text-[11px] font-bold uppercase tracking-wider text-terracotta">Live State Sync</span>
-          <h2 class="font-serif text-xl font-bold text-forest mt-1">Interactive Demo Flow</h2>
-          <p class="text-xs text-stone-600 mt-1.5 leading-relaxed">
-            Every action inside the phone updates the family caregiver dashboard and adherence metrics in real time.
-          </p>
-
-          <div class="mt-4 space-y-2.5 text-xs">
-            <div class="p-3 rounded-2xl bg-cream border border-stone-200/70 flex items-start gap-2.5">
-              <span class="w-5 h-5 rounded-full bg-forest text-white flex items-center justify-center text-[11px] font-bold shrink-0 mt-0.5">1</span>
-              <div>
-                <p class="font-semibold text-stone-800">Voice-First Elder Home</p>
-                <p class="text-stone-500">Tap <b>"Scan Pill"</b> or <b>"I've taken it"</b> on Aaji's 10:00 AM Amlodipine card.</p>
-              </div>
-            </div>
-            <div class="p-3 rounded-2xl bg-cream border border-stone-200/70 flex items-start gap-2.5">
-              <span class="w-5 h-5 rounded-full bg-forest text-white flex items-center justify-center text-[11px] font-bold shrink-0 mt-0.5">2</span>
-              <div>
-                <p class="font-semibold text-stone-800">Visual AI Pill Match + Safety Alert</p>
-                <p class="text-stone-500">Verify capsule visually or switch between <b>10 mg</b> and <b>5 mg</b> to trigger the dose discrepancy safeguard.</p>
-              </div>
-            </div>
-            <div class="p-3 rounded-2xl bg-cream border border-stone-200/70 flex items-start gap-2.5">
-              <span class="w-5 h-5 rounded-full bg-forest text-white flex items-center justify-center text-[11px] font-bold shrink-0 mt-0.5">3</span>
-              <div>
-                <p class="font-semibold text-stone-800">Care Circle & Doctor Telehealth</p>
-                <p class="text-stone-500">Check Priya's live Care Circle feed or message Dr. Marcus Webb about prescription adjustments.</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Quick Demo State Reset -->
-          <div class="mt-5 pt-4 border-t border-stone-200/70 flex items-center justify-between">
-            <div>
-              <span class="text-[11px] text-stone-400 block">Current Adherence Today</span>
-              <span id="sidebarAdherenceText" class="text-sm font-bold text-forest">2 of 3 doses (67%)</span>
-            </div>
-            <button onclick="resetDemoState()" class="text-xs font-semibold text-stone-500 hover:text-forest underline">
-              Reset Demo
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Center Interactive Phone Frame -->
-      <div class="phone-frame order-1 lg:order-2">
-        <!-- Status Bar -->
-        <div class="px-6 pt-2 pb-1 flex items-center justify-between text-[11px] font-semibold text-stone-800 select-none bg-[#FAF6F0]">
-          <span>9:41</span>
-          <div class="phone-notch"></div>
-          <div class="flex items-center gap-1">
-            <span>5G</span>
-            <svg class="w-4 h-3.5" fill="currentColor" viewBox="0 0 16 16"><rect x="1" y="4" width="11" height="8" rx="1.5" stroke="currentColor" fill="none"/><rect x="2.5" y="5.5" width="8" height="5" rx="0.5"/><rect x="13" y="6" width="1.5" height="4" rx="0.5"/></svg>
-          </div>
-        </div>
-
-        <!-- Dynamic Screen Viewport -->
-        <div id="phoneViewport" class="flex-1 overflow-y-auto no-scrollbar px-4 pt-2 pb-4">
-          <!-- Screens injected via JS or toggled -->
-
-          <!-- SCREEN 1: MY DAY (ELDER VIEW) -->
-          <div id="screen-home" class="app-screen space-y-3.5">
-            <div class="flex items-center justify-between pt-1">
-              <div class="flex items-center gap-3">
-                <div class="w-11 h-11 rounded-full bg-amber-100 border-2 border-white shadow flex items-center justify-center text-lg">
-                  👵🏽
-                </div>
-                <div>
-                  <h2 class="font-serif text-lg font-bold text-stone-900 leading-tight">Good morning, Aaji ☀️</h2>
-                  <p class="text-xs text-stone-500">Wed, 29 Jan · Voice Companion Active</p>
-                </div>
-              </div>
-              <button onclick="speakVoicePrompt('Good morning Aaji! Your next medicine is Amlodipine 5 milligrams at 10 AM.')" class="w-9 h-9 rounded-full bg-white border border-stone-200 flex items-center justify-center text-forest shadow-sm" title="Read Aloud">
-                🔔
-              </button>
-            </div>
-
-            <!-- Hero Medication Card -->
-            <div class="rounded-3xl bg-gradient-to-br from-[#FDECC8] to-[#FCE3B0] p-4 border border-amber-300/60 shadow-sm">
-              <div class="flex items-center justify-between text-xs font-semibold text-amber-900 mb-1.5">
-                <span class="flex items-center gap-1.5">💊 Next medication</span>
-                <span class="px-2.5 py-0.5 rounded-full bg-amber-900/10 text-amber-950">🕙 10:00 AM</span>
-              </div>
-              <h3 class="font-serif text-xl font-bold text-stone-900">Amlodipine — 5 mg</h3>
-              <p class="text-xs text-stone-700 mb-3.5">For blood pressure · 1 tablet after breakfast</p>
-
-              <button id="heroTakeBtn" onclick="switchScreen('confirm')" class="w-full py-3 rounded-2xl bg-forest hover:bg-forestDark text-white font-semibold text-sm shadow-sm flex items-center justify-center gap-2 transition">
-                <span>✓ I've taken it</span>
-              </button>
-
-              <div class="grid grid-cols-2 gap-2 mt-2.5">
-                <button onclick="switchScreen('scanner')" class="py-2 rounded-xl bg-white/90 hover:bg-white text-stone-800 font-semibold text-xs border border-amber-900/10 flex items-center justify-center gap-1.5 transition">
-                  <span>📷 Verify Pill</span>
-                </button>
-                <button onclick="speakVoicePrompt('Calling Priya from your Care Circle for assistance.')" class="py-2 rounded-xl bg-white/90 hover:bg-white text-stone-800 font-semibold text-xs border border-amber-900/10 flex items-center justify-center gap-1.5 transition">
-                  <span>🎧 Need help</span>
-                </button>
-              </div>
-            </div>
-
-            <!-- Remaining Medications -->
-            <div class="bg-white rounded-3xl p-4 border border-stone-200/80 shadow-sm">
-              <div class="flex items-center justify-between mb-2.5">
-                <h4 class="text-xs font-bold uppercase tracking-wider text-stone-500">Today's Remaining Medications (2)</h4>
-                <button onclick="switchScreen('adherence')" class="text-[11px] font-semibold text-forest hover:underline">See all</button>
-              </div>
-              <div class="space-y-2">
-                <div onclick="switchScreen('scanner')" class="p-2.5 rounded-2xl bg-cream hover:bg-sage/40 border border-stone-200/60 flex items-center justify-between cursor-pointer transition">
-                  <div class="flex items-center gap-2.5">
-                    <span class="w-7 h-7 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold">💊</span>
-                    <div>
-                      <p class="text-xs font-bold text-stone-800">Metformin — 500 mg</p>
-                      <p class="text-[11px] text-stone-500">With lunch · Verify with camera</p>
-                    </div>
-                  </div>
-                  <span class="text-xs font-semibold text-stone-600">1:00 PM ›</span>
-                </div>
-                <div class="p-2.5 rounded-2xl bg-cream border border-stone-200/60 flex items-center justify-between">
-                  <div class="flex items-center gap-2.5">
-                    <span class="w-7 h-7 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center text-xs font-bold">💊</span>
-                    <div>
-                      <p class="text-xs font-bold text-stone-800">Atorvastatin — 10 mg</p>
-                      <p class="text-[11px] text-stone-500">After dinner</p>
-                    </div>
-                  </div>
-                  <span class="text-xs font-semibold text-stone-600">8:00 PM ›</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Upcoming Appointment Card -->
-            <div onclick="switchScreen('chat')" class="rounded-3xl bg-sage/80 p-3.5 border border-forest/15 flex items-center justify-between cursor-pointer hover:bg-sage transition">
-              <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-2xl bg-forest text-white flex items-center justify-center text-sm">
-                  🗓️
-                </div>
-                <div>
-                  <p class="text-[11px] font-semibold text-forest">Upcoming appointment</p>
-                  <p class="text-xs font-bold text-stone-900">Cardiology Check-up · Dr. Webb</p>
-                  <p class="text-[11px] text-stone-600">Fri, 31 Jan · 11:30 AM</p>
-                </div>
-              </div>
-              <span class="text-forest font-bold">›</span>
-            </div>
-
-            <!-- Talk to Saathi Voice Bar -->
-            <button onclick="speakVoicePrompt('Hello Aaji, I am listening. You can ask me about your medicines, blood pressure dose, or call Priya.')" class="w-full rounded-3xl bg-white p-3.5 border border-stone-200/90 shadow-sm flex items-center justify-between text-left hover:border-forest transition">
-              <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-2xl bg-forest text-white flex items-center justify-center shadow-sm">
-                  🎙️
-                </div>
-                <div>
-                  <p class="text-xs font-bold text-stone-900">Talk to Saathi</p>
-                  <p class="text-[11px] text-stone-500">Ask in Hindi, Marathi, or English</p>
-                </div>
-              </div>
-              <span class="text-xs font-semibold text-forest">Speak ›</span>
-            </button>
-          </div>
-
-          <!-- SCREEN 2: VISUAL DOSE VERIFICATION (3D PILL SCANNER) -->
-          <div id="screen-scanner" class="app-screen hidden space-y-4">
-            <div class="flex items-center justify-between pt-1">
-              <button onclick="switchScreen('home')" class="w-8 h-8 rounded-full bg-white border border-stone-200 flex items-center justify-center text-sm font-bold">←</button>
-              <span class="text-xs font-bold uppercase tracking-wider text-stone-500">AI Visual Dose Check</span>
-              <span class="text-xs font-semibold text-forest">14:23</span>
-            </div>
-
-            <div class="bg-white rounded-[32px] p-6 border border-stone-200/80 shadow-sm text-center flex flex-col items-center justify-between min-h-[520px]">
-              <div class="w-full text-left">
-                <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700">Computer Vision Match</span>
-                <h3 id="scanHeaderTitle" class="font-serif text-xl font-bold text-stone-900 mt-2">Position Pill in Circle</h3>
-                <p id="scanSubTitle" class="text-xs text-stone-500 mt-0.5">Checking shape, imprint & dosage strength</p>
-              </div>
-
-              <!-- Center 3D Pill or Green Match Check -->
-              <div id="pillScannerGraphic" class="relative w-52 h-52 flex items-center justify-center my-4">
-                <div class="absolute inset-0 rounded-full bg-blue-100/70 scan-ring"></div>
-                <div class="absolute inset-6 rounded-full bg-white shadow-inner border border-blue-100"></div>
-                <!-- 3D Blue Capsule -->
-                <div id="capsuleElement" class="pill-3d z-10">
-                  <div class="pill-top"></div>
-                  <div class="pill-bottom"></div>
-                  <div class="pill-shine"></div>
-                </div>
-                <!-- Match Confirmed Badge (Hidden until verified) -->
-                <div id="matchConfirmedElement" class="hidden z-10 w-24 h-24 rounded-3xl bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/30">
-                  <svg class="w-14 h-14" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-                  </svg>
-                </div>
-              </div>
-
-              <div class="w-full space-y-2.5">
-                <button id="verifyPillActionBtn" onclick="runVisualPillVerify()" class="w-full py-3.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm shadow-md shadow-blue-600/25 transition">
-                  Verify Dose
-                </button>
-                <button onclick="switchScreen('confirm')" class="w-full py-2.5 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold text-xs transition">
-                  Manual Dose Review →
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- SCREEN 3: MEDICATION CONFIRMATION & DOSE DISCREPANCY -->
-          <div id="screen-confirm" class="app-screen hidden space-y-3.5">
-            <div class="flex items-center gap-2.5 pt-1">
-              <button onclick="switchScreen('home')" class="w-8 h-8 rounded-full bg-white border border-stone-200 flex items-center justify-center text-sm font-bold">←</button>
-              <div>
-                <h2 class="font-serif text-base font-bold text-stone-900">Confirm medication</h2>
-                <p class="text-[11px] text-stone-500">Verify details for safety and accuracy</p>
-              </div>
-            </div>
-
-            <div class="bg-white rounded-3xl p-4 border border-stone-200/80 shadow-sm space-y-3">
-              <div class="flex items-center gap-2.5 pb-2 border-b border-stone-100">
-                <span class="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center text-sm">💊</span>
-                <div>
-                  <h3 class="font-serif text-base font-bold text-stone-900">Amlodipine</h3>
-                  <p class="text-[11px] text-stone-500">Blood pressure medication</p>
-                </div>
-              </div>
-
-              <div class="flex items-center justify-between text-xs py-1">
-                <span class="text-stone-500">📋 Prescribed amount</span>
-                <span class="font-bold text-stone-900">5 mg</span>
-              </div>
-
-              <div class="flex items-center justify-between text-xs py-1">
-                <span class="text-stone-500">⚠️ Amount taken</span>
-                <select id="doseSelect" onchange="evaluateDoseDiscrepancy()" class="px-2.5 py-1.5 rounded-xl bg-stone-100 font-bold text-stone-900 border border-stone-300 focus:outline-none">
-                  <option value="10" selected>10 mg (2 tablets)</option>
-                  <option value="5">5 mg (1 tablet)</option>
-                </select>
-              </div>
-
-              <div class="flex items-center justify-between text-xs py-1">
-                <span class="text-stone-500">🕙 Time taken</span>
-                <span class="px-2.5 py-1 rounded-xl bg-stone-100 font-semibold text-stone-800">10:07 AM</span>
-              </div>
-
-              <!-- Dynamic Discrepancy Warning Box -->
-              <div id="discrepancyAlertBox" class="rounded-2xl bg-amber-50 border border-amber-300 p-3 text-xs text-amber-950 space-y-1">
-                <p class="font-bold flex items-center gap-1.5">⚠️ Dose discrepancy —</p>
-                <p class="text-[11px] leading-relaxed text-amber-900">
-                  The amount taken (<b>10 mg</b>) is different from the prescribed amount (<b>5 mg</b>). Please review before confirming.
-                </p>
-              </div>
-
-              <label class="flex items-center gap-2 text-xs text-stone-700 pt-1 cursor-pointer">
-                <input id="confirmCheckbox" type="checkbox" checked class="rounded text-forest focus:ring-forest" />
-                <span>I confirm these details are correct.</span>
-              </label>
-            </div>
-
-            <div class="space-y-2">
-              <button onclick="confirmMedicationDose()" class="w-full py-3 rounded-2xl bg-forest hover:bg-forestDark text-white font-semibold text-xs shadow-sm transition">
-                ✓ Confirm taken & Notify Care Circle
-              </button>
-              <button onclick="switchScreen('home')" class="w-full py-2.5 rounded-2xl bg-white border border-stone-200 text-stone-700 font-semibold text-xs">
-                🕒 Not yet taken
-              </button>
-              <button onclick="speakVoicePrompt('Alerting Priya and Dr. Webb that you are unsure about your Amlodipine dosage.')" class="w-full py-2.5 rounded-2xl bg-white border border-stone-200 text-stone-700 font-semibold text-xs">
-                🎧 Unsure · Ask Family
-              </button>
-            </div>
-          </div>
-
-          <!-- SCREEN 4: MY MEDICATIONS & REFILL TRACKER (USAFE+ INTEGRATION) -->
-          <div id="screen-adherence" class="app-screen hidden space-y-3.5">
-            <div class="flex items-center justify-between pt-1">
-              <h2 class="font-serif text-lg font-bold text-stone-900">My Medications</h2>
-              <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-sage text-forest">+ Add Med</span>
-            </div>
-
-            <!-- 94% Adherence & Streak Card -->
-            <div class="bg-white rounded-3xl p-4 border border-stone-200/80 shadow-sm flex items-center gap-4">
-              <div class="w-16 h-16 rounded-full border-4 border-forest flex items-center justify-center font-bold text-sm text-forest shrink-0">
-                94%
-              </div>
-              <div>
-                <h3 class="text-sm font-bold text-stone-900">94% Monthly Adherence</h3>
-                <p class="text-[11px] text-stone-500">This month: 28 of 30 days on time</p>
-                <p class="text-[11px] font-semibold text-terracotta mt-1">🔥 7-day streak active!</p>
-              </div>
-            </div>
-
-            <!-- Weekly Dots -->
-            <div class="bg-white rounded-2xl p-3 border border-stone-200/80 flex items-center justify-between text-center text-[10px] font-semibold text-stone-500">
-              <div><span>M</span><div class="w-6 h-6 rounded-full bg-forest text-white flex items-center justify-center mt-1">✓</div></div>
-              <div><span>T</span><div class="w-6 h-6 rounded-full bg-forest text-white flex items-center justify-center mt-1">✓</div></div>
-              <div><span>W</span><div class="w-6 h-6 rounded-full bg-forest text-white flex items-center justify-center mt-1">✓</div></div>
-              <div><span>T</span><div class="w-6 h-6 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mt-1">✕</div></div>
-              <div><span>F</span><div class="w-6 h-6 rounded-full bg-forest text-white flex items-center justify-center mt-1">✓</div></div>
-              <div><span>S</span><div class="w-6 h-6 rounded-full bg-forest text-white flex items-center justify-center mt-1">✓</div></div>
-              <div><span>S</span><div class="w-6 h-6 rounded-full bg-forest text-white flex items-center justify-center mt-1">✓</div></div>
-            </div>
-
-            <!-- Supply & Refill Bars -->
-            <div class="space-y-2.5">
-              <div class="bg-white rounded-2xl p-3.5 border border-stone-200/80">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <p class="text-xs font-bold text-stone-900">Metformin 500mg</p>
-                    <p class="text-[11px] text-stone-500">Oral · 8:00 AM & 1:00 PM</p>
-                  </div>
-                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sage text-forest">Active</span>
-                </div>
-                <div class="mt-2.5">
-                  <div class="flex justify-between text-[10px] text-stone-500 mb-1">
-                    <span>Supply remaining</span>
-                    <span class="font-semibold text-stone-700">18 of 30 pills</span>
-                  </div>
-                  <div class="w-full h-1.5 bg-stone-100 rounded-full overflow-hidden">
-                    <div class="w-3/5 h-full bg-forest rounded-full"></div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="bg-white rounded-2xl p-3.5 border border-amber-300/80">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <p class="text-xs font-bold text-stone-900">Amlodipine 5mg</p>
-                    <p class="text-[11px] text-stone-500">Oral · 10:00 AM Daily</p>
-                  </div>
-                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">⚠️ Low Supply</span>
-                </div>
-                <div class="mt-2.5">
-                  <div class="flex justify-between text-[10px] text-stone-500 mb-1">
-                    <span>Supply remaining</span>
-                    <span class="font-bold text-terracotta">5 of 30 — Refill now!</span>
-                  </div>
-                  <div class="w-full h-1.5 bg-stone-100 rounded-full overflow-hidden">
-                    <div class="w-1/6 h-full bg-terracotta rounded-full"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- SCREEN 5: FAMILY CARE DASHBOARD (PRIYA VIEW) -->
-          <div id="screen-family" class="app-screen hidden space-y-3.5">
-            <div class="flex items-center justify-between pt-1">
-              <div class="flex items-center gap-2.5">
-                <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-base">👩🏽‍💼</div>
-                <div>
-                  <h2 class="font-serif text-base font-bold text-stone-900">Hi, Priya 👋</h2>
-                  <p class="text-[11px] text-stone-500">Aaji's Live Care Overview</p>
-                </div>
-              </div>
-              <span class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-forest">● Connected</span>
-            </div>
-
-            <!-- Adherence Progress Today -->
-            <div class="bg-white rounded-3xl p-4 border border-stone-200/80 shadow-sm">
-              <div class="flex items-center justify-between text-xs mb-1">
-                <span class="font-semibold text-stone-600">💊 Medication adherence (today)</span>
-                <span id="familyAdherenceBadge" class="font-bold text-forest bg-sage px-2 py-0.5 rounded-full">67%</span>
-              </div>
-              <p id="familyDoseCountText" class="font-serif text-lg font-bold text-stone-900">2 of 3 doses taken</p>
-              <div class="w-full h-2 bg-stone-100 rounded-full overflow-hidden mt-2">
-                <div id="familyProgressBar" class="w-2/3 h-full bg-forest rounded-full transition-all duration-500"></div>
-              </div>
-            </div>
-
-            <!-- Quick Contact -->
-            <div class="grid grid-cols-2 gap-2.5">
-              <button onclick="speakVoicePrompt('Calling Aaji on speakerphone...')" class="py-2.5 rounded-2xl bg-forest text-white font-semibold text-xs flex items-center justify-center gap-1.5 shadow-sm">
-                <span>📞 Call Aaji</span>
-              </button>
-              <button onclick="switchScreen('chat')" class="py-2.5 rounded-2xl bg-white border border-stone-200 text-stone-800 font-semibold text-xs flex items-center justify-center gap-1.5">
-                <span>📹 Doctor Chat</span>
-              </button>
-            </div>
-
-            <!-- Care Circle Activity Feed -->
-            <div class="bg-white rounded-3xl p-4 border border-stone-200/80 shadow-sm">
-              <h3 class="text-xs font-bold uppercase tracking-wider text-stone-500 mb-3">Care Circle Activity</h3>
-              <div id="careCircleFeed" class="space-y-3 text-xs">
-                <div class="flex items-start gap-2.5">
-                  <span class="w-5 h-5 rounded-full bg-emerald-100 text-forest flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">✓</span>
-                  <div>
-                    <p class="font-semibold text-stone-800">10:07 AM · Amlodipine — taken (10 mg)</p>
-                    <p class="text-[11px] text-amber-700 font-medium">⚠️ Logged with 10 mg dose discrepancy alert</p>
-                  </div>
-                </div>
-                <div class="flex items-start gap-2.5">
-                  <span class="w-5 h-5 rounded-full bg-emerald-100 text-forest flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">✓</span>
-                  <div>
-                    <p class="font-semibold text-stone-800">8:00 AM · Morning check-in completed</p>
-                    <p class="text-[11px] text-stone-500">Verified via Voice Companion</p>
-                  </div>
-                </div>
-                <div class="flex items-start gap-2.5">
-                  <span class="w-5 h-5 rounded-full bg-stone-100 text-stone-600 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">🗓️</span>
-                  <div>
-                    <p class="font-semibold text-stone-800">Yesterday · Cardiology reminder shared</p>
-                    <p class="text-[11px] text-stone-500">Sent by Priya to Aaji's voice calendar</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- SCREEN 6: DOCTOR TELEHEALTH CHAT (DR. MARCUS WEBB) -->
-          <div id="screen-chat" class="app-screen hidden flex flex-col h-[590px]">
-            <div class="bg-forest text-white rounded-2xl p-3 flex items-center justify-between mb-3">
-              <div class="flex items-center gap-2.5">
-                <div class="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-sm">🩺</div>
-                <div>
-                  <h3 class="text-xs font-bold">Dr. Marcus Webb</h3>
-                  <p class="text-[10px] text-emerald-200">Endocrinologist & Care Team · ● Online</p>
-                </div>
-              </div>
-              <span class="text-xs bg-white/15 px-2.5 py-1 rounded-lg">📹 Telehealth</span>
-            </div>
-
-            <div id="chatMessagesList" class="flex-1 overflow-y-auto space-y-2.5 pr-1 text-xs">
-              <div class="bg-forest text-white p-3 rounded-2xl rounded-tl-sm max-w-[85%]">
-                Consistent with Metformin. We noticed a 10mg vs 5mg Amlodipine check-in earlier—did Aaji have a question on the strength?
-              </div>
-              <div class="bg-white border border-stone-200 p-3 rounded-2xl rounded-tr-sm max-w-[85%] ml-auto text-stone-800">
-                Based on your recent A1C & BP results, I've updated the morning schedule. Sending the updated prescription PDF now.
-              </div>
-              <div onclick="alert('Opening Updated_Prescription.pdf (Verified Digital Rx — Amlodipine 5mg & Metformin 500mg)')" class="bg-sage/70 border border-forest/20 p-2.5 rounded-2xl max-w-[80%] flex items-center gap-2.5 cursor-pointer hover:bg-sage">
-                <span class="text-lg">📄</span>
-                <div>
-                  <p class="font-bold text-forest text-xs">Updated_Prescription.pdf</p>
-                  <p class="text-[10px] text-stone-500">124 KB · Tap to preview</p>
-                </div>
-              </div>
-            </div>
-
-            <div class="mt-2 pt-2 border-t border-stone-200 flex items-center gap-2">
-              <input id="chatInputBox" type="text" placeholder="Message Dr. Webb..." class="flex-1 px-3.5 py-2 rounded-full bg-white border border-stone-300 text-xs focus:outline-none focus:border-forest" onkeydown="if(event.key==='Enter') sendDoctorChat()" />
-              <button onclick="sendDoctorChat()" class="w-8 h-8 rounded-full bg-forest text-white flex items-center justify-center text-xs font-bold">➤</button>
-            </div>
-          </div>
-
-        </div>
-
-        <!-- Bottom App Navigation Bar -->
-        <nav class="bg-white border-t border-stone-200/90 px-3 py-2 flex items-center justify-around text-[10px] font-semibold text-stone-500">
-          <button onclick="switchScreen('home')" id="nav-home" class="bottom-nav-btn flex flex-col items-center gap-0.5 text-forest">
-            <span class="text-base">🏠</span>
-            <span>My Day</span>
-          </button>
-          <button onclick="switchScreen('scanner')" id="nav-scanner" class="bottom-nav-btn flex flex-col items-center gap-0.5">
-            <span class="text-base">📷</span>
-            <span>Verify Pill</span>
-          </button>
-          <button onclick="switchScreen('adherence')" id="nav-adherence" class="bottom-nav-btn flex flex-col items-center gap-0.5">
-            <span class="text-base">💊</span>
-            <span>Medicines</span>
-          </button>
-          <button onclick="switchScreen('family')" id="nav-family" class="bottom-nav-btn flex flex-col items-center gap-0.5">
-            <span class="text-base">👨‍👩‍👧</span>
-            <span>Family</span>
-          </button>
-          <button onclick="switchScreen('chat')" id="nav-chat" class="bottom-nav-btn flex flex-col items-center gap-0.5">
-            <span class="text-base">💬</span>
-            <span>Doctor</span>
-          </button>
-        </nav>
-      </div>
-    </section>
-
-    <!-- 4-SCREEN HACKATHON PITCH BOARD VIEW (HIDDEN BY DEFAULT, TOGGLED VIA HEADER) -->
-    <section id="pitchBoardView" class="hidden">
-      <div class="text-center max-w-2xl mx-auto mb-8">
-        <h2 class="font-serif text-2xl sm:text-3xl font-bold text-forest">Your care, together.</h2>
-        <p class="text-xs sm:text-sm text-stone-600 mt-1">
-          A complete 4-stage hackathon architecture combining voice-first elder onboarding, AI pill verification, dose discrepancy safeguards, and family care synchronization.
-        </p>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 justify-items-center">
-        <!-- Board Card 1: Elder My Day -->
-        <div class="flex flex-col items-center">
-          <div class="mb-3 text-center">
-            <span class="text-xs font-bold px-3 py-1 rounded-full bg-forest text-white">1. My Day (Elder View)</span>
-            <p class="text-[11px] text-stone-500 mt-1">Voice-first daily medication & care hub</p>
-          </div>
-          <div class="w-[310px] rounded-[36px] border-8 border-stone-900 bg-[#FAF6F0] p-4 shadow-xl space-y-3">
-            <div class="flex items-center gap-2.5">
-              <div class="w-9 h-9 rounded-full bg-amber-100 flex items-center justify-center">👵🏽</div>
-              <div>
-                <p class="font-serif text-sm font-bold text-stone-900">Good morning, Aaji ☀️</p>
-                <p class="text-[10px] text-stone-500">Wed, 29 Jan · Voice Active</p>
-              </div>
-            </div>
-            <div class="rounded-2xl bg-[#FDECC8] p-3.5 border border-amber-300/60">
-              <div class="flex justify-between text-[10px] font-bold text-amber-900">
-                <span>💊 Next medication</span>
-                <span>10:00 AM</span>
-              </div>
-              <p class="font-serif text-base font-bold text-stone-900 mt-1">Amlodipine — 5 mg</p>
-              <p class="text-[10px] text-stone-600 mb-2.5">For blood pressure</p>
-              <div class="py-2 rounded-xl bg-forest text-white text-center text-xs font-semibold">✓ I've taken it</div>
-            </div>
-            <div class="bg-white rounded-2xl p-3 border border-stone-200 text-xs space-y-1.5">
-              <p class="text-[10px] font-bold text-stone-400 uppercase">Remaining Today (2)</p>
-              <div class="flex justify-between"><span>Metformin — 500 mg</span><span class="text-stone-500">1:00 PM</span></div>
-              <div class="flex justify-between"><span>Atorvastatin — 10 mg</span><span class="text-stone-500">8:00 PM</span></div>
-            </div>
-            <div class="bg-sage rounded-2xl p-3 text-xs">
-              <p class="font-bold text-forest">Cardiology Check-up</p>
-              <p class="text-[10px] text-stone-600">Fri, 31 Jan · 11:30 AM</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Board Card 2: Visual Dose Verification -->
-        <div class="flex flex-col items-center">
-          <div class="mb-3 text-center">
-            <span class="text-xs font-bold px-3 py-1 rounded-full bg-blue-600 text-white">2. AI Pill Verification</span>
-            <p class="text-[11px] text-stone-500 mt-1">Single-tap computer vision capsule match</p>
-          </div>
-          <div class="w-[310px] rounded-[36px] border-8 border-stone-900 bg-white p-5 shadow-xl flex flex-col items-center justify-between min-h-[430px]">
-            <div class="w-full">
-              <span class="text-[10px] font-bold text-blue-600 uppercase">Visual Scanner</span>
-              <p class="font-serif text-base font-bold text-stone-900">Metformin 500mg — Match Confirmed</p>
-            </div>
-            <div class="relative w-40 h-40 flex items-center justify-center my-4">
-              <div class="absolute inset-0 rounded-full bg-blue-50"></div>
-              <div class="pill-3d">
-                <div class="pill-top"></div>
-                <div class="pill-bottom"></div>
-                <div class="pill-shine"></div>
-              </div>
-            </div>
-            <div class="w-full py-2.5 rounded-full bg-blue-600 text-white text-center text-xs font-semibold shadow">
-              ✓ Match Confirmed (14:23)
-            </div>
-          </div>
-        </div>
-
-        <!-- Board Card 3: Dose Discrepancy Alert -->
-        <div class="flex flex-col items-center">
-          <div class="mb-3 text-center">
-            <span class="text-xs font-bold px-3 py-1 rounded-full bg-amber-600 text-white">3. Safety Discrepancy Guard</span>
-            <p class="text-[11px] text-stone-500 mt-1">Prevents accidental double-dosing</p>
-          </div>
-          <div class="w-[310px] rounded-[36px] border-8 border-stone-900 bg-[#FAF6F0] p-4 shadow-xl space-y-3">
-            <p class="font-serif text-base font-bold text-stone-900">Confirm medication</p>
-            <div class="bg-white rounded-2xl p-3 border border-stone-200 text-xs space-y-2">
-              <div class="flex justify-between"><span>Prescribed</span><span class="font-bold">5 mg</span></div>
-              <div class="flex justify-between"><span>Amount taken</span><span class="font-bold text-amber-700">10 mg ▾</span></div>
-              <div class="p-2.5 rounded-xl bg-amber-50 border border-amber-300 text-[11px] text-amber-900">
-                <b>⚠️ Dose discrepancy —</b> Taken amount (10 mg) differs from prescribed (5 mg).
-              </div>
-            </div>
-            <div class="py-2.5 rounded-xl bg-forest text-white text-center text-xs font-semibold">✓ Confirm taken</div>
-            <div class="py-2 rounded-xl bg-white border border-stone-200 text-center text-xs">🎧 Needs help</div>
-          </div>
-        </div>
-
-        <!-- Board Card 4: Family & Doctor Care Circle -->
-        <div class="flex flex-col items-center">
-          <div class="mb-3 text-center">
-            <span class="text-xs font-bold px-3 py-1 rounded-full bg-forest text-white">4. Family & Doctor Portal</span>
-            <p class="text-[11px] text-stone-500 mt-1">Real-time adherence, refills & telehealth</p>
-          </div>
-          <div class="w-[310px] rounded-[36px] border-8 border-stone-900 bg-[#FAF6F0] p-4 shadow-xl space-y-3">
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="font-serif text-sm font-bold text-stone-900">Hi, Priya 👋</p>
-                <p class="text-[10px] text-stone-500">Aaji's Care Circle</p>
-              </div>
-              <span class="text-xs font-bold text-forest bg-sage px-2 py-0.5 rounded-full">94% Score</span>
-            </div>
-            <div class="bg-white rounded-2xl p-3 border border-stone-200 text-xs">
-              <p class="text-[10px] text-stone-500">Today's Adherence</p>
-              <p class="font-bold text-sm text-stone-900">2 of 3 doses taken (67%)</p>
-              <div class="w-full h-1.5 bg-stone-100 rounded-full mt-1.5 overflow-hidden">
-                <div class="w-2/3 h-full bg-forest"></div>
-              </div>
-            </div>
-            <div class="bg-white rounded-2xl p-3 border border-stone-200 text-[11px] space-y-1.5">
-              <p class="font-bold text-stone-700">Recent Care Activity</p>
-              <p class="text-stone-600">✅ 10:07 AM · Amlodipine logged</p>
-              <p class="text-stone-600">📄 Dr. Webb sent Updated_Rx.pdf</p>
-              <p class="text-terracotta font-semibold">⚠️ Amlodipine: 5 of 30 left (Refill)</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-  </main>
-
-  <script>
-    function switchScreen(screenId) {
-      document.querySelectorAll('.app-screen').forEach(el => el.classList.add('hidden'));
-      const target = document.getElementById('screen-' + screenId);
-      if (target) target.classList.remove('hidden');
-
-      document.querySelectorAll('.screen-pill').forEach(btn => {
-        btn.className = 'screen-pill px-4 py-2 rounded-full text-xs font-semibold bg-white text-stone-600 border border-stone-200 hover:border-forest/40 transition';
-      });
-      const activePill = document.getElementById('pill-' + screenId);
-      if (activePill) {
-        activePill.className = 'screen-pill px-4 py-2 rounded-full text-xs font-semibold bg-forest text-white shadow-sm transition';
-      }
-
-      document.querySelectorAll('.bottom-nav-btn').forEach(btn => {
-        btn.classList.remove('text-forest');
-        btn.classList.add('text-stone-500');
-      });
-      const activeNav = document.getElementById('nav-' + (screenId === 'confirm' ? 'home' : screenId));
-      if (activeNav) {
-        activeNav.classList.add('text-forest');
-        activeNav.classList.remove('text-stone-500');
-      }
-    }
-
-    function setLayoutMode(mode) {
-      const singleView = document.getElementById('singleSimulatorView');
-      const singlePills = document.getElementById('singleNavPills');
-      const boardView = document.getElementById('pitchBoardView');
-      const btnSingle = document.getElementById('btnModeSingle');
-      const btnBoard = document.getElementById('btnModeBoard');
-
-      if (mode === 'board') {
-        singleView.classList.add('hidden');
-        singlePills.classList.add('hidden');
-        boardView.classList.remove('hidden');
-        btnBoard.className = 'px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-white text-forest shadow-sm transition';
-        btnSingle.className = 'px-3.5 py-1.5 rounded-lg text-xs font-semibold text-stone-600 hover:text-stone-900 transition';
-      } else {
-        singleView.classList.remove('hidden');
-        singlePills.classList.remove('hidden');
-        boardView.classList.add('hidden');
-        btnSingle.className = 'px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-white text-forest shadow-sm transition';
-        btnBoard.className = 'px-3.5 py-1.5 rounded-lg text-xs font-semibold text-stone-600 hover:text-stone-900 transition';
-      }
-    }
-
-    function runVisualPillVerify() {
-      const capsule = document.getElementById('capsuleElement');
-      const matchBadge = document.getElementById('matchConfirmedElement');
-      const title = document.getElementById('scanHeaderTitle');
-      const sub = document.getElementById('scanSubTitle');
-      const btn = document.getElementById('verifyPillActionBtn');
-
-      capsule.classList.add('hidden');
-      matchBadge.classList.remove('hidden');
-      title.textContent = 'Metformin 500mg — Match Confirmed';
-      sub.textContent = 'Verified imprint & capsule color at 14:23 · Today';
-      btn.textContent = '✓ Dose Verified — Continue to Confirm';
-      btn.className = 'w-full py-3.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm shadow-md transition';
-      btn.onclick = () => switchScreen('confirm');
-
-      speakVoicePrompt('Pill match confirmed. Metformin 500 milligrams.');
-    }
-
-    function evaluateDoseDiscrepancy() {
-      const val = document.getElementById('doseSelect').value;
-      const alertBox = document.getElementById('discrepancyAlertBox');
-      if (val === '5') {
-        alertBox.className = 'rounded-2xl bg-emerald-50 border border-emerald-300 p-3 text-xs text-emerald-950';
-        alertBox.innerHTML = '<p class="font-bold">✓ Exact Prescribed Dose Match (5 mg)</p><p class="text-[11px] mt-0.5">Safe to confirm and log to Aaji’s Care Circle.</p>';
-      } else {
-        alertBox.className = 'rounded-2xl bg-amber-50 border border-amber-300 p-3 text-xs text-amber-950 space-y-1';
-        alertBox.innerHTML = '<p class="font-bold">⚠️ Dose discrepancy —</p><p class="text-[11px] leading-relaxed">The amount taken (<b>10 mg</b>) is different from the prescribed amount (<b>5 mg</b>). Please review before confirming.</p>';
-      }
-    }
-
-    function confirmMedicationDose() {
-      const dose = document.getElementById('doseSelect').value;
-      document.getElementById('familyAdherenceBadge').textContent = '100%';
-      document.getElementById('familyDoseCountText').textContent = '3 of 3 doses taken';
-      document.getElementById('familyProgressBar').style.width = '100%';
-      document.getElementById('sidebarAdherenceText').textContent = '3 of 3 doses (100%)';
-
-      const heroBtn = document.getElementById('heroTakeBtn');
-      heroBtn.textContent = '✓ Confirmed at 10:07 AM (' + dose + ' mg)';
-      heroBtn.className = 'w-full py-3 rounded-2xl bg-emerald-700 text-white font-semibold text-sm flex items-center justify-center gap-2';
-
-      speakVoicePrompt('Thank you Aaji. Your Amlodipine dose has been logged and shared with Priya.');
-      switchScreen('family');
-    }
-
-    function sendDoctorChat() {
-      const input = document.getElementById('chatInputBox');
-      const text = input.value.trim();
-      if (!text) return;
-      const list = document.getElementById('chatMessagesList');
-      const bubble = document.createElement('div');
-      bubble.className = 'bg-white border border-stone-200 p-3 rounded-2xl rounded-tr-sm max-w-[85%] ml-auto text-stone-800';
-      bubble.textContent = text;
-      list.appendChild(bubble);
-      input.value = '';
-      list.scrollTop = list.scrollHeight;
-    }
-
-    function resetDemoState() {
-      document.getElementById('familyAdherenceBadge').textContent = '67%';
-      document.getElementById('familyDoseCountText').textContent = '2 of 3 doses taken';
-      document.getElementById('familyProgressBar').style.width = '66%';
-      document.getElementById('sidebarAdherenceText').textContent = '2 of 3 doses (67%)';
-      const heroBtn = document.getElementById('heroTakeBtn');
-      heroBtn.textContent = "✓ I've taken it";
-      heroBtn.className = 'w-full py-3 rounded-2xl bg-forest hover:bg-forestDark text-white font-semibold text-sm shadow-sm flex items-center justify-center gap-2 transition';
-
-      document.getElementById('capsuleElement').classList.remove('hidden');
-      document.getElementById('matchConfirmedElement').classList.add('hidden');
-      document.getElementById('scanHeaderTitle').textContent = 'Position Pill in Circle';
-      document.getElementById('verifyPillActionBtn').textContent = 'Verify Dose';
-      document.getElementById('verifyPillActionBtn').onclick = runVisualPillVerify;
-
-      switchScreen('home');
-    }
-
-    function speakVoicePrompt(text) {
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-        const utter = new SpeechSynthesisUtterance(text);
-        utter.rate = 0.95;
-        window.speechSynthesis.speak(utter);
-      }
-    }
-  </script>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z"/></symbol>
+<symbol id="cam" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></symbol>
+<symbol id="pill" viewBox="0 0 24 24"><path d="M10.5 20.5a5 5 0 01-7-7l10-10a5 5 0 017 7z"/><path d="M8.5 8.5l7 7"/></symbol>
+<symbol id="ppl" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0113 0"/><path d="M16 4.5a3.5 3.5 0 010 7M18 14a6.5 6.5 0 013.5 6"/></symbol>
+<symbol id="chat" viewBox="0 0 24 24"><path d="M21 12a8 8 0 01-11.5 7.2L3 21l1.8-5.5A8 8 0 1121 12z"/></symbol>
+<symbol id="mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/></symbol>
+<symbol id="ok" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></symbol>
+<symbol id="back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+<symbol id="phone" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z"/></symbol>
+<symbol id="send" viewBox="0 0 24 24"><path d="M4 12l16-8-6 16-3-7z"/></symbol>
+<symbol id="speak" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9zM17 8a5 5 0 010 8"/></symbol>
+</defs></svg>
+
+<header class="top">
+  <div class="brand serif"><svg class="i" style="width:30px;height:30px"><use href="#pill"/></svg>Saathi <small>Medicine companion · <span style="font-weight:700;color:var(--teal)">Sample Preview</span></small></div>
+  <div class="tools">
+    <a id="connectedApp" href="/" class="tool" style="text-decoration:none;display:inline-flex;align-items:center;background:var(--teal);color:#fff">Open connected app</a>
+    <button class="tool" id="bBoard" aria-pressed="false" onclick="toggleBoard()">Show all screens</button>
+    <button class="tool" id="bBig" aria-pressed="false" onclick="toggleBig()">Larger text</button>
+    <button class="tool" onclick="say('Namaste Aaji! It is 10 AM. Time to take your 5 milligram Amlodipine for blood pressure.')"><svg class="i" style="vertical-align:-6px"><use href="#speak"/></svg> Hear reminder</button>
+    <button class="tool" onclick="reset()">Reset demo</button>
+  </div>
+</header>
+
+<main class="stage"><div class="phone" id="phone">
+<div class="view" id="view">
+
+<!-- HOME -->
+<section class="scr on" id="s-home" aria-label="My day">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <div><h2 class="serif">Good morning, Aaji</h2><p class="mut">Wednesday, 29 January</p></div>
+    <button class="tool" style="width:52px;padding:0;border-radius:50%;display:grid;place-items:center" aria-label="Read my day aloud" onclick="say('Good morning Aaji. Your next medicine is Amlodipine, 5 milligrams, at 10 AM.')"><svg class="i"><use href="#speak"/></svg></button>
+  </div>
+  <div class="hero" id="hero"></div>
+  <div class="card"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><b>Today</b><span class="mut" id="cnt"></span></div><ul class="tl" id="tl"></ul></div>
+  <button class="btn alt" onclick="go('chat')"><svg class="i"><use href="#chat"/></svg>Cardiology visit · Fri 31 Jan, 11:30 AM</button>
+  <button class="btn" onclick="say('Namaste Aaji. This is a sample Saathi voice reminder.')"><svg class="i"><use href="#mic"/></svg>Hear a sample voice prompt</button>
+</section>
+
+<!-- SCAN -->
+<section class="scr" id="s-scan" aria-label="Check pill">
+  <button class="back" onclick="go('home')"><svg class="i"><use href="#back"/></svg>Back</button>
+  <div><h2 class="serif" id="scT">Place the pill in the circle</h2><p class="mut" id="scS">Explore a sample camera screen.</p></div>
+  <div class="lens" id="lens">
+    <svg id="cap" width="70" height="140" viewBox="0 0 70 140" aria-label="Pill"><rect x="6" y="4" width="58" height="132" rx="29" fill="#fff" stroke="#12231F" stroke-width="3"/><path d="M6 70V33a29 29 0 0158 0v37z" fill="#F5B301"/><path d="M6 70h58" stroke="#12231F" stroke-width="3"/><path d="M20 22v30" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".6"/></svg>
+    <svg id="tick" class="i" style="display:none;width:96px;height:96px;stroke:var(--ok);stroke-width:2.5"><use href="#ok"/></svg>
+  </div>
+  <button class="btn" id="scBtn" onclick="scan()"><svg class="i"><use href="#cam"/></svg>Check this pill</button>
+  <button class="btn alt" onclick="go('confirm')">Skip — review the dose myself</button>
+</section>
+
+<!-- CONFIRM -->
+<section class="scr" id="s-confirm" aria-label="Confirm dose">
+  <button class="back" onclick="go('home')"><svg class="i"><use href="#back"/></svg>Back</button>
+  <h2 class="serif">Amlodipine</h2>
+  <div class="card" style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;justify-content:space-between"><span class="mut">Prescribed</span><b>5 mg · 1 tablet</b></div>
+    <label for="dose" class="mut">How much did you take?</label>
+    <select id="dose" onchange="doseCheck()"><option value="">Choose an amount</option><option value="5">5 mg (1 tablet)</option><option value="10">10 mg (2 tablets)</option></select>
+    <div id="dnote" aria-live="polite"></div>
+  </div>
+  <button class="btn" id="cBtn" onclick="confirmDose()" disabled style="opacity:.5">Choose an amount first</button>
+  <button class="btn alt" onclick="go('home')">Not taken yet</button>
+</section>
+
+<!-- MEDS -->
+<section class="scr" id="s-meds" aria-label="Medicines">
+  <h2 class="serif">My medicines</h2>
+  <div class="card" style="display:flex;gap:14px;align-items:center">
+    <div class="serif" style="font-size:2rem;color:var(--teal)">94%</div>
+    <div><b>28 of 30 days on time</b><p class="mut">7-day streak. Keep going, Aaji.</p></div>
+  </div>
+  <div class="card"><div class="week"><div>M<span>✓</span></div><div>T<span>✓</span></div><div>W<span>✓</span></div><div>T<span class="x">✕</span></div><div>F<span>✓</span></div><div>S<span>✓</span></div><div>S<span>✓</span></div></div></div>
+  <div class="card"><b>Metformin 500 mg</b><p class="mut">8:00 AM and 1:00 PM</p><p style="margin:8px 0 6px">18 of 30 tablets left</p><div class="bar"><i style="width:60%"></i></div></div>
+  <div class="card" style="border:2px solid var(--warn)"><b>Amlodipine 5 mg</b><p class="mut">10:00 AM daily</p><p style="margin:8px 0 6px;color:var(--warn);font-weight:700">5 of 30 tablets left — refill this week</p><div class="bar"><i style="width:17%;background:var(--warn)"></i></div></div>
+</section>
+
+<!-- FAMILY -->
+<section class="scr" id="s-family" aria-label="Family view">
+  <div><h2 class="serif">Hi, Priya</h2><p class="mut">You’re viewing sample activity for Aaji.</p></div>
+  <div class="card"><b id="fT"></b><div class="bar" style="margin-top:10px"><i id="fB"></i></div></div>
+  <div class="row"><button class="btn" onclick="say('Sample contact action.')"><svg class="i"><use href="#phone"/></svg>Call Aaji</button><button class="btn alt" onclick="go('chat')"><svg class="i"><use href="#chat"/></svg>Doctor</button></div>
+  <div class="card"><b>Recent activity</b><ul class="feed" id="feed" style="margin-top:12px"></ul></div>
+</section>
+
+<!-- CHAT -->
+<section class="scr" id="s-chat" aria-label="Doctor chat">
+  <div class="card" style="background:var(--teal);color:#fff;border:0"><b>Dr. Marcus Webb</b><p style="opacity:.9">Endocrinologist · Online now</p></div>
+  <div id="msgs">
+    <div class="bub dr">We saw a 10 mg Amlodipine entry earlier. Did Aaji have a question about the strength?</div>
+    <div class="bub me">Based on your latest A1C and BP results, I’ve updated the morning schedule. Sending the new prescription now.</div>
+    <button class="bub dr" style="background:var(--oksoft);color:var(--ink);border:2px solid var(--ok);text-align:left" onclick="say('Opening the updated prescription.')"><b>Updated prescription.pdf</b><br><span class="mut">124 KB · Tap to open</span></button>
+  </div>
+  <div class="chatin"><input id="ci" placeholder="Message Dr. Webb" aria-label="Message Dr. Webb" onkeydown="if(event.key==='Enter')send()"><button onclick="send()" aria-label="Send"><svg class="i"><use href="#send"/></svg></button></div>
+</section>
+</div>
+
+<div class="toast" id="toast" role="status"><span id="tmsg"></span><button onclick="undo()">Undo</button></div>
+<nav aria-label="Main">
+  <button data-n="home" onclick="go('home')"><svg class="i"><use href="#home"/></svg>Today</button>
+  <button data-n="scan" onclick="go('scan')"><svg class="i"><use href="#cam"/></svg>Check pill</button>
+  <button data-n="meds" onclick="go('meds')"><svg class="i"><use href="#pill"/></svg>Medicines</button>
+  <button data-n="family" onclick="go('family')"><svg class="i"><use href="#ppl"/></svg>Family</button>
+  <button data-n="chat" onclick="go('chat')"><svg class="i"><use href="#chat"/></svg>Doctor</button>
+</nav>
+</div></main>
+
+<script>
+const $=id=>document.getElementById(id);
+const base=()=>[{n:'Metformin',mg:500,t:'8:00 AM',s:'taken'},{n:'Amlodipine',mg:5,t:'10:00 AM',s:'due'},{n:'Metformin',mg:500,t:'1:00 PM',s:'later'},{n:'Atorvastatin',mg:10,t:'8:00 PM',s:'later'}];
+let D=base(),flag=null,feed=[['8:00 AM','Metformin 500 mg taken','Confirmed by voice check-in']],prev=null,tm;
+const ico=s=>s==='taken'?'<svg class="i"><use href="#ok"/></svg>':'';
+function render(){
+  const taken=D.filter(d=>d.s==='taken').length,due=D.find(d=>d.s==='due');
+  $('cnt').textContent=taken+' of '+D.length+' taken';
+  $('tl').innerHTML=D.map(d=>`<li><span class="dot ${d.s}">${ico(d.s)}</span><div><b>${d.n} ${d.mg} mg</b><span class="mut">${d.s==='taken'?'Taken':d.s==='due'?'Due now':d.s==='review'?'Needs review':'Later today'}</span></div><span class="t">${d.t}</span></li>`).join('');
+  $('hero').innerHTML=due?`<div class="when"><span>Next medicine</span><span>${due.t}</span></div><h3 class="serif">${due.n} · ${due.mg} mg</h3><p>For blood pressure. 1 tablet after breakfast.</p><button class="btn" onclick="go('confirm')"><svg class="i"><use href="#ok"/></svg>I’ve taken it</button><div class="row"><button class="btn alt" onclick="go('scan')"><svg class="i"><use href="#cam"/></svg>Check pill</button><button class="btn alt" onclick="go('family')"><svg class="i"><use href="#phone"/></svg>Need help</button></div>`:`<div class="when"><span>Morning medicine</span><span>Done</span></div><h3 class="serif">No sample dose due now</h3><p>Next: Metformin at 1:00 PM.</p>`;
+  const p=Math.round(taken/D.length*100);
+  $('fT').textContent=taken+' of '+D.length+' doses taken today ('+p+'%)';$('fB').style.width=p+'%';
+  $('feed').innerHTML=feed.slice().reverse().map(f=>`<li><span class="dot taken" style="width:28px;height:28px"><svg class="i" style="width:16px;height:16px"><use href="#ok"/></svg></span><div><b>${f[0]} · ${f[1]}</b><p class="${f[3]?'':'mut'}" ${f[3]?'style="color:var(--warn);font-weight:700"':''}>${f[2]}</p></div></li>`).join('');
+}
+function go(n){document.querySelectorAll('.scr').forEach(s=>s.classList.toggle('on',s.id==='s-'+n));
+  document.querySelectorAll('nav button').forEach(b=>b.setAttribute('aria-current',b.dataset.n===(n==='confirm'?'home':n)));
+  $('view').scrollTop=0;if(n==='confirm')doseCheck();}
+function scan(){$('cap').style.display='none';$('tick').style.display='block';$('lens').classList.add('ok');
+  $('scT').textContent='Sample match';$('scS').textContent='This sample represents Amlodipine 5 mg. Use the connected app to review your scheduled dose.';
+  const b=$('scBtn');b.className='btn done';b.innerHTML='<svg class="i"><use href="#ok"/></svg>Continue';b.onclick=()=>go('confirm');say('Sample camera result shown.');}
+function doseCheck(){const v=$('dose').value,n=$('dnote'),b=$('cBtn');b.disabled=!v;b.style.opacity=v?1:.5;
+  if(!v){n.innerHTML='';b.textContent='Choose an amount first';b.className='btn';return;}
+  if(v==='5'){n.innerHTML='<div class="note ok"><b>This matches your prescription.</b><br>Review the sample details before saving.</div>';b.className='btn';b.textContent='Save sample report';}
+  else{n.innerHTML='<div class="note warn"><b>This is twice your prescribed dose.</b><br>The connected app would send this record to review.</div>';b.className='btn warn';b.textContent='Flag sample for review';say('The sample amount differs from the scheduled amount.');}}
+function confirmDose(){const v=$('dose').value,due=D.find(d=>d.s==='due');if(!v||!due)return;prev=JSON.stringify([D,feed]);
+  due.s=v==='5'?'taken':'review';
+  feed.push(['10:07 AM',v==='10'?'Amlodipine entry needs review':'Amlodipine reported taken',v==='10'?'Dose alert: 10 mg taken, 5 mg prescribed':'Matches prescription',v==='10']);
+  $('dose').value='';render();go('home');
+  $('tmsg').textContent=v==='10'?'Sample flagged for review':'Sample report saved';$('toast').classList.add('on');clearTimeout(tm);tm=setTimeout(()=>$('toast').classList.remove('on'),6000);
+  say('Your sample report was saved.');}
+function undo(){if(!prev)return;[D,feed]=JSON.parse(prev);prev=null;$('toast').classList.remove('on');render();}
+function send(){const i=$('ci'),t=i.value.trim();if(!t)return;const d=document.createElement('div');d.className='bub me';d.textContent=t;$('msgs').appendChild(d);i.value='';}
+function reset(){D=base();feed=[feed[0]];prev=null;$('toast').classList.remove('on');$('lens').classList.remove('ok');$('cap').style.display='';$('tick').style.display='none';
+  $('scT').textContent='Place the pill in the circle';$('scS').textContent='Explore a sample camera screen.';
+  const b=$('scBtn');b.className='btn';b.innerHTML='<svg class="i"><use href="#cam"/></svg>Check this pill';b.onclick=scan;$('dose').value='';render();go('home');}
+function toggleBoard(){const o=document.body.classList.toggle('board');$('bBoard').setAttribute('aria-pressed',o);$('bBoard').textContent=o?'Back to app':'Show all screens';if(o)doseCheck();}
+function toggleBig(){const o=document.body.classList.toggle('big');$('bBig').setAttribute('aria-pressed',o);}
+function say(t){if('speechSynthesis'in window){speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.rate=.9;speechSynthesis.speak(u);}}
+if(location.protocol==='file:')$('connectedApp').href='http://127.0.0.1:3000/';
+render();go('home');
+</script>
 </body>
 </html>
