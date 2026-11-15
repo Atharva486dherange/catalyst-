@@ -1,0 +1,15 @@
+node_modules/
+.next/
+out/
+functions/lib/
+*.tsbuildinfo
+next-env.d.ts
+.env*
+!.env.example
+.secret.local
+.firebaserc
+.firebase/
+*-debug.log*
+playwright-report/
+test-results/
+coverage/

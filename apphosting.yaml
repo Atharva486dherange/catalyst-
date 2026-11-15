@@ -1,0 +1,8 @@
+# Firebase App Hosting builds the Next.js app with its framework adapter.
+runConfig:
+  minInstances: 0
+# Bind runtime secrets in the deployed environment, for example:
+# env:
+#   - variable: INVITATION_ENCRYPTION_KEY
+#     secret: INVITATION_ENCRYPTION_KEY
+#     availability: [RUNTIME]
